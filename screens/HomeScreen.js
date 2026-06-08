@@ -67,6 +67,14 @@ export default function HomeScreen({
             onPress={() => onPlayVideo?.(card.title.replace(/\n/g, ' '))}
           />
         ))}
+
+        <Pressable
+          style={({ pressed }) => [styles.seeMoreButton, pressed && { opacity: 0.85 }]}
+          onPress={() => {}}
+        >
+          <Text style={styles.seeMoreText}>Resolver Mais</Text>
+          <ChevronDown size={18} color={COLORS.primary} strokeWidth={2.5} />
+        </Pressable>
       </ScrollView>
 
       <Pressable style={styles.fab} onPress={() => {}}>
@@ -119,7 +127,6 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: COLORS.primary,
     height: 100,
-    paddingTop: 28,
     paddingHorizontal: 24,
     flexDirection: 'row',
     alignItems: 'center',
@@ -144,14 +151,13 @@ const styles = StyleSheet.create({
   welcomeText: {
     fontFamily: 'Montserrat_700Bold',
     color: COLORS.white,
-    fontSize: 18,
+    fontSize: 17  ,
   },
   scroll: {
     flex: 1,
-    marginTop: 32,
+    marginTop: 24,
   },
   scrollContent: {
-    paddingHorizontal: 32,
     paddingBottom: 120,
     gap: 24,
     alignItems: 'center',
@@ -185,6 +191,22 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: COLORS.primary,
     lineHeight: 24,
+  },
+  seeMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    alignSelf: 'center',
+    backgroundColor: COLORS.inputBg,
+    borderRadius: 999,
+    paddingVertical: 12,
+    paddingHorizontal: 28,
+  },
+  seeMoreText: {
+    fontFamily: 'Montserrat_700Bold',
+    fontSize: 15,
+    color: COLORS.primary,
   },
   fab: {
     position: 'absolute',

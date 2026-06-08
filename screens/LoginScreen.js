@@ -46,7 +46,7 @@ export default function LoginScreen({ onLogin, onForgotPassword, onRegister }) {
             icon={<User size={22} color={COLORS.primary} />}
             value={username}
             onChangeText={setUsername}
-            placeholder=""
+            placeholder="Usuário"
             autoCapitalize="none"
           />
 
@@ -54,7 +54,7 @@ export default function LoginScreen({ onLogin, onForgotPassword, onRegister }) {
             icon={<Mail size={22} color={COLORS.primary} />}
             value={email}
             onChangeText={setEmail}
-            placeholder=""
+            placeholder="E-mail"
             autoCapitalize="none"
             keyboardType="email-address"
             secureTextEntry={!showEmail}
@@ -72,7 +72,7 @@ export default function LoginScreen({ onLogin, onForgotPassword, onRegister }) {
             icon={<Lock size={22} color={COLORS.primary} />}
             value={password}
             onChangeText={setPassword}
-            placeholder=""
+            placeholder="Senha"
             secureTextEntry={!showPassword}
             rightIcon={
               showPassword ? (

@@ -67,7 +67,10 @@ export default function App() {
         />
       )}
       {screen === 'forgot' && (
-        <ForgotPasswordScreen onFinish={() => setScreen('login')} />
+        <ForgotPasswordScreen
+          onFinish={() => setScreen('login')}
+          onBack={() => setScreen('login')}
+        />
       )}
       {screen === 'register' && (
         <RegisterScreen onLogin={() => setScreen('login')} />

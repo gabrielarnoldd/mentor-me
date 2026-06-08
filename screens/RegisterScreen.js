@@ -10,7 +10,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { AtSign, Eye, EyeOff, Lock, Unlock, User } from 'lucide-react-native';
+import { ArrowLeft, AtSign, Eye, EyeOff, Lock, Unlock, User } from 'lucide-react-native';
 
 const COLORS = {
   white: '#FFFDFD',
@@ -37,6 +37,10 @@ export default function RegisterScreen({ onLogin }) {
         contentContainerStyle={styles.scroll}
         keyboardShouldPersistTaps="handled"
       >
+        <Pressable onPress={onLogin} hitSlop={8} style={styles.backButton}>
+          <ArrowLeft size={26} color={COLORS.primary} />
+        </Pressable>
+
         <View style={styles.header}>
           <Text style={styles.title}>MENTOR ME</Text>
           <Text style={styles.subtitle}>Sua carreira em foco</Text>
@@ -150,6 +154,11 @@ const styles = StyleSheet.create({
     maxWidth: 480,
     width: '100%',
     alignSelf: 'center',
+  },
+  backButton: {
+    alignSelf: 'flex-start',
+    padding: 4,
+    marginBottom: 16,
   },
   header: {
     alignItems: 'center',

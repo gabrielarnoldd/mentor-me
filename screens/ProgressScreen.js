@@ -113,9 +113,9 @@ export default function ProgressScreen({
           </Svg>
         </View>
 
-        <View style={styles.barsList}>
+        <View style={styles.skillsList}>
           {SKILLS.map((s) => (
-            <SkillBar key={s.label} label={s.label} progress={s.progress} />
+            <SkillCard key={s.label} label={s.label} progress={s.progress} />
           ))}
         </View>
       </ScrollView>
@@ -180,12 +180,15 @@ function FallbackPie({ percent }) {
   );
 }
 
-function SkillBar({ label, progress }) {
+function SkillCard({ label, progress }) {
   return (
-    <View style={styles.barTrack}>
-      <View style={[styles.barFill, { width: `${progress}%` }]} />
-      <View style={styles.labelPill}>
-        <Text style={styles.labelText}>{label}</Text>
+    <View style={styles.skillCard}>
+      <View style={styles.skillCardHeader}>
+        <Text style={styles.skillLabel}>{label}</Text>
+        <Text style={styles.skillPercent}>{progress}%</Text>
+      </View>
+      <View style={styles.skillTrack}>
+        <View style={[styles.skillFill, { width: `${progress}%` }]} />
       </View>
     </View>
   );
@@ -199,7 +202,6 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: COLORS.primary,
     height: 100,
-    paddingTop: 28,
     paddingHorizontal: 24,
     flexDirection: 'row',
     alignItems: 'center',
@@ -278,36 +280,40 @@ const styles = StyleSheet.create({
     top: 30,
     left: 60,
   },
-  barsList: {
+  skillsList: {
+    gap: 14,
+  },
+  skillCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 18,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
     gap: 12,
   },
-  barTrack: {
-    height: 36,
-    backgroundColor: COLORS.primary,
-    borderRadius: 999,
-    overflow: 'hidden',
-    justifyContent: 'center',
+  skillCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  barFill: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    backgroundColor: COLORS.inputBg,
-  },
-  labelPill: {
-    position: 'absolute',
-    left: 4,
-    top: 3,
-    bottom: 3,
-    backgroundColor: COLORS.primary,
-    borderRadius: 999,
-    paddingHorizontal: 16,
-    justifyContent: 'center',
-  },
-  labelText: {
+  skillLabel: {
     fontFamily: 'Montserrat_700Bold',
-    fontSize: 14,
-    color: COLORS.white,
+    fontSize: 15,
+    color: COLORS.primary,
+  },
+  skillPercent: {
+    fontFamily: 'Montserrat_700Bold',
+    fontSize: 15,
+    color: COLORS.link,
+  },
+  skillTrack: {
+    height: 10,
+    borderRadius: 999,
+    backgroundColor: COLORS.background,
+    overflow: 'hidden',
+  },
+  skillFill: {
+    height: '100%',
+    borderRadius: 999,
+    backgroundColor: COLORS.primary,
   },
 });

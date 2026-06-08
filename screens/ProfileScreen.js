@@ -15,7 +15,6 @@ import {
   Menu,
   Pencil,
   User,
-  UserPlus,
 } from 'lucide-react-native';
 import MenuDrawer from '../components/MenuDrawer';
 
@@ -70,7 +69,7 @@ export default function ProfileScreen({ onLogout, onNavigate, onHome }) {
             <User size={86} color={COLORS.inputBg} strokeWidth={2} />
           </View>
           <View style={styles.avatarBadge}>
-            <UserPlus size={20} color={COLORS.inputBg} strokeWidth={2.2} />
+            <Text style={styles.avatarBadgePlus}>+</Text>
           </View>
         </View>
 
@@ -167,7 +166,6 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: COLORS.primary,
     height: 100,
-    paddingTop: 28,
     paddingHorizontal: 24,
     flexDirection: 'row',
     alignItems: 'center',
@@ -218,6 +216,12 @@ const styles = StyleSheet.create({
     borderColor: COLORS.background,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  avatarBadgePlus: {
+    fontFamily: 'Montserrat_700Bold',
+    fontSize: 24,
+    lineHeight: 24,
+    color: COLORS.inputBg,
   },
   form: {
     gap: 14,

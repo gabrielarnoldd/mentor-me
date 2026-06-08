@@ -10,7 +10,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { Eye, EyeOff, Lock, ShieldCheck, Unlock } from 'lucide-react-native';
+import { ArrowLeft, Eye, EyeOff, Lock, ShieldCheck, Unlock } from 'lucide-react-native';
 
 const COLORS = {
   white: '#FFFDFD',
@@ -20,7 +20,7 @@ const COLORS = {
   primary: '#02457C',
 };
 
-export default function ForgotPasswordScreen({ onFinish }) {
+export default function ForgotPasswordScreen({ onFinish, onBack }) {
   const [code, setCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -36,6 +36,10 @@ export default function ForgotPasswordScreen({ onFinish }) {
         contentContainerStyle={styles.scroll}
         keyboardShouldPersistTaps="handled"
       >
+        <Pressable onPress={onBack} hitSlop={8} style={styles.backButton}>
+          <ArrowLeft size={26} color={COLORS.primary} />
+        </Pressable>
+
         <View style={styles.header}>
           <Text style={styles.title}>MENTOR ME</Text>
           <Text style={styles.subtitle}>Sua carreira em foco</Text>
@@ -140,6 +144,11 @@ const styles = StyleSheet.create({
     maxWidth: 480,
     width: '100%',
     alignSelf: 'center',
+  },
+  backButton: {
+    alignSelf: 'flex-start',
+    padding: 4,
+    marginBottom: 16,
   },
   header: {
     alignItems: 'center',
