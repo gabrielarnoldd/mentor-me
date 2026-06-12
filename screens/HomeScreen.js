@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { ChevronDown, Menu } from 'lucide-react-native';
+import { ChevronDown, Menu, Play, Clock, Calendar } from 'lucide-react-native';
 import MenuDrawer from '../components/MenuDrawer';
 
 const COLORS = {
@@ -22,9 +22,27 @@ const COLORS = {
 };
 
 const CARDS = [
-  { id: '1', title: 'Como criar um\ncurrículo acertivo' },
-  { id: '2', title: 'Como se conectar\ncom as pessoas certas' },
-  { id: '3', title: 'De bom dia a bom dia,\na sua imagem se cria' },
+  {
+    id: '1',
+    title: 'Como criar um\ncurrículo acertivo',
+    duration: '0:45',
+    date: '08 Jun 2026',
+    image: require('../assets/fotoCurso1.jpg'),
+  },
+  {
+    id: '2',
+    title: 'Como se conectar\ncom as pessoas certas',
+    duration: '0:30',
+    date: '02 Jun 2026',
+    image: require('../assets/fotoCurso2.jpg'),
+  },
+  {
+    id: '3',
+    title: 'De bom dia a bom dia,\na sua imagem se cria',
+    duration: '1:00',
+    date: '28 Mai 2026',
+    image: require('../assets/fotoCurso4.jpg'),
+  },
 ];
 
 export default function HomeScreen({
@@ -64,6 +82,9 @@ export default function HomeScreen({
           <Card
             key={card.id}
             title={card.title}
+            duration={card.duration}
+            date={card.date}
+            image={card.image}
             onPress={() => onPlayVideo?.(card.title.replace(/\n/g, ' '))}
           />
         ))}
@@ -72,7 +93,7 @@ export default function HomeScreen({
           style={({ pressed }) => [styles.seeMoreButton, pressed && { opacity: 0.85 }]}
           onPress={() => {}}
         >
-          <Text style={styles.seeMoreText}>Resolver Mais</Text>
+          <Text style={styles.seeMoreText}>Mostrar Mais</Text>
           <ChevronDown size={18} color={COLORS.primary} strokeWidth={2.5} />
         </Pressable>
       </ScrollView>
@@ -94,12 +115,29 @@ export default function HomeScreen({
   );
 }
 
-function Card({ title, onPress }) {
+function Card({ title, duration, date, image, onPress }) {
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [styles.card, pressed && { opacity: 0.85 }]}
+      style={({ pressed }) => [
+        styles.card,
+        image && styles.cardWithImage,
+        pressed && { opacity: 0.85 },
+      ]}
     >
+      {image && (
+        <>
+          <Image source={image} style={styles.cardImageFill} resizeMode="cover" />
+          <View style={styles.cardImageShade} />
+        </>
+      )}
+
+      <View style={styles.playOverlay}>
+        <View style={styles.playBadge}>
+          <Play size={22} color={COLORS.white} fill={COLORS.white} />
+        </View>
+      </View>
+
       <View style={styles.cardBottom}>
         <Svg
           width="100%"
@@ -114,6 +152,16 @@ function Card({ title, onPress }) {
           />
         </Svg>
         <Text style={styles.cardTitle}>{title}</Text>
+        <View style={styles.cardMeta}>
+          <View style={styles.metaItem}>
+            <Clock size={13} color={COLORS.primary} strokeWidth={2.5} />
+            <Text style={styles.metaText}>{duration}</Text>
+          </View>
+          <View style={styles.metaItem}>
+            <Calendar size={13} color={COLORS.primary} strokeWidth={2.5} />
+            <Text style={styles.metaText}>{date}</Text>
+          </View>
+        </View>
       </View>
     </Pressable>
   );
@@ -170,12 +218,51 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.cardImage,
     overflow: 'hidden',
   },
+  cardWithImage: {
+    backgroundColor: '#000',
+    height: 320,
+  },
+  cardImageFill: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
+  },
+  cardImageShade: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+  },
+  playOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 124,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2,
+  },
+  playBadge: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: 'rgba(2, 69, 124, 0.85)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   cardBottom: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
-    height: 110,
+    height: 124,
     backgroundColor: COLORS.inputBg,
     justifyContent: 'center',
     paddingHorizontal: 22,
@@ -191,6 +278,20 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: COLORS.primary,
     lineHeight: 24,
+  },
+  cardMeta: {
+    gap: 4,
+    marginTop: 8,
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  metaText: {
+    fontFamily: 'Montserrat_600SemiBold',
+    fontSize: 12,
+    color: COLORS.primary,
   },
   seeMoreButton: {
     flexDirection: 'row',

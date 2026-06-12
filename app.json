@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "projeto-arnold",
-    "slug": "projeto-arnold",
+    "name": "Mentor Me",
+    "slug": "mentor-me",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { Menu } from 'lucide-react-native';
+import { Menu, RotateCcw, ArrowLeft } from 'lucide-react-native';
 import MenuDrawer from '../components/MenuDrawer';
 
 const COLORS = {
@@ -46,15 +46,27 @@ export default function QuizQuestionScreen({
 }) {
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState(null);
+  const [score, setScore] = useState(0);
+  const [answered, setAnswered] = useState(0);
+  const [showResults, setShowResults] = useState(false);
+  const [finalScore, setFinalScore] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
+
   const scaleYes = useRef(new Animated.Value(1)).current;
   const scaleNo = useRef(new Animated.Value(1)).current;
+  const resultsOpacity = useRef(new Animated.Value(0)).current;
+  const resultsScale = useRef(new Animated.Value(0.85)).current;
 
   const current = QUESTIONS[index];
 
   const handleAnswer = (choice) => {
     if (selected) return;
     setSelected(choice);
+    setAnswered(index + 1);
+
+    const isCorrect = choice === current.answer;
+    const newScore = isCorrect ? score + 1 : score;
+    if (isCorrect) setScore(newScore);
 
     const anim = choice === 'yes' ? scaleYes : scaleNo;
     Animated.sequence([
@@ -64,14 +76,41 @@ export default function QuizQuestionScreen({
 
     setTimeout(() => {
       setSelected(null);
+
       if (index + 1 >= QUESTIONS.length) {
+        setFinalScore(newScore);
         setIndex(0);
-        onFinish?.();
+        setScore(0);
+        setAnswered(0);
+        Animated.parallel([
+          Animated.timing(resultsOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+          Animated.spring(resultsScale, { toValue: 1, useNativeDriver: true, tension: 80, friction: 8 }),
+        ]).start();
+        setShowResults(true);
       } else {
         setIndex((i) => i + 1);
       }
     }, FEEDBACK_MS);
   };
+
+  const handleRetry = () => {
+    Animated.parallel([
+      Animated.timing(resultsOpacity, { toValue: 0, duration: 200, useNativeDriver: true }),
+      Animated.timing(resultsScale, { toValue: 0.85, duration: 200, useNativeDriver: true }),
+    ]).start(() => {
+      setShowResults(false);
+      resultsScale.setValue(0.85);
+    });
+  };
+
+  const handleBack = () => {
+    Animated.timing(resultsOpacity, { toValue: 0, duration: 200, useNativeDriver: true }).start(() => {
+      setShowResults(false);
+      onFinish?.(finalScore, QUESTIONS.length);
+    });
+  };
+
+  const scoreColor = finalScore / QUESTIONS.length >= 0.6 ? COLORS.correct : COLORS.wrong;
 
   return (
     <View style={styles.flex}>
@@ -119,9 +158,40 @@ export default function QuizQuestionScreen({
         </View>
 
         <Text style={styles.progress}>
-          {index + 1}/{QUESTIONS.length}
+          {answered}/{QUESTIONS.length}
         </Text>
       </View>
+
+      {showResults && (
+        <Animated.View style={[styles.resultsOverlay, { opacity: resultsOpacity }]}>
+          <Animated.View style={[styles.resultsCard, { transform: [{ scale: resultsScale }] }]}>
+            <Text style={styles.resultTitle}>Resultado</Text>
+
+            <Text style={[styles.scoreBig, { color: scoreColor }]}>
+              {finalScore}<Text style={styles.scoreBigTotal}>/{QUESTIONS.length}</Text>
+            </Text>
+            <Text style={styles.scoreLabel}>acertos</Text>
+
+            <View style={styles.resultButtons}>
+              <Pressable
+                style={({ pressed }) => [styles.retryButton, pressed && { opacity: 0.85 }]}
+                onPress={handleRetry}
+              >
+                <RotateCcw size={18} color={COLORS.white} strokeWidth={2.5} />
+                <Text style={styles.retryButtonText}>Tentar Novamente</Text>
+              </Pressable>
+
+              <Pressable
+                style={({ pressed }) => [styles.backButton, pressed && { opacity: 0.85 }]}
+                onPress={handleBack}
+              >
+                <ArrowLeft size={18} color={COLORS.primary} strokeWidth={2.5} />
+                <Text style={styles.backButtonText}>Voltar aos Quizzes</Text>
+              </Pressable>
+            </View>
+          </Animated.View>
+        </Animated.View>
+      )}
 
       <MenuDrawer
         visible={menuOpen}
@@ -265,5 +335,85 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.primary,
     marginTop: 8,
+  },
+  resultsOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(2, 69, 124, 0.65)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+  resultsCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 28,
+    paddingVertical: 32,
+    paddingHorizontal: 28,
+    width: '100%',
+    maxWidth: 340,
+    alignItems: 'center',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  resultTitle: {
+    fontFamily: 'Montserrat_700Bold',
+    fontSize: 20,
+    color: COLORS.primary,
+    marginBottom: 12,
+  },
+  scoreBig: {
+    fontFamily: 'Montserrat_700Bold',
+    fontSize: 56,
+    lineHeight: 62,
+  },
+  scoreBigTotal: {
+    fontSize: 28,
+    color: COLORS.primary,
+  },
+  scoreLabel: {
+    fontFamily: 'Montserrat_600SemiBold',
+    fontSize: 15,
+    color: COLORS.link,
+    marginBottom: 28,
+  },
+  resultButtons: {
+    gap: 12,
+    width: '100%',
+  },
+  retryButton: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 999,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  retryButtonText: {
+    fontFamily: 'Montserrat_700Bold',
+    color: COLORS.white,
+    fontSize: 15,
+  },
+  backButton: {
+    backgroundColor: COLORS.inputBg,
+    borderRadius: 999,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  backButtonText: {
+    fontFamily: 'Montserrat_700Bold',
+    color: COLORS.primary,
+    fontSize: 15,
   },
 });

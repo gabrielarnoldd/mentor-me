@@ -184,10 +184,9 @@ const styles = StyleSheet.create({
   },
   controls: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 22,
-    paddingHorizontal: 16,
+    gap: 28,
   },
   skipButton: {
     width: 56,

@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import {
   Image,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Circle } from 'react-native-svg';
 import { Menu } from 'lucide-react-native';
 import MenuDrawer from '../components/MenuDrawer';
 
@@ -27,16 +26,6 @@ const SKILLS = [
   { label: 'Linkedin', progress: 88 },
   { label: 'Perfil profissional', progress: 55 },
 ];
-
-let ChartReady = false;
-let PieComponent = null;
-if (Platform.OS === 'web') {
-  const { Pie } = require('react-chartjs-2');
-  const { Chart, ArcElement } = require('chart.js');
-  Chart.register(ArcElement);
-  PieComponent = Pie;
-  ChartReady = true;
-}
 
 const averageProgress = Math.round(
   SKILLS.reduce((sum, s) => sum + s.progress, 0) / SKILLS.length
@@ -79,43 +68,26 @@ export default function ProgressScreen({
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.sectionTitle}>
-          Este é seu nível de progresso nas competências avaliadas:
+          Seu progresso nas competências
         </Text>
 
-        <View style={styles.chartWrapper}>
-          <PieChart percent={averageProgress} />
-          <View pointerEvents="none" style={styles.chartCenter}>
-            <Text style={styles.chartCenterText}>
-              Progresso médio{'\n'}das habilidades
-            </Text>
+        <View style={styles.ringWrapper}>
+          <ProgressRing percent={averageProgress} size={320} stroke={26} />
+          <View pointerEvents="none" style={styles.ringCenter}>
+            <Text style={styles.ringPercent}>{averageProgress}%</Text>
+            <Text style={styles.ringLabel}>Progresso médio</Text>
           </View>
-          <Svg
-            width={50}
-            height={50}
-            viewBox="0 0 50 50"
-            style={styles.chartArrow}
-            pointerEvents="none"
-          >
-            <Path
-              d="M4 38 Q 18 14, 44 8"
-              stroke={COLORS.primary}
-              strokeWidth={3}
-              fill="none"
-              strokeLinecap="round"
-            />
-            <Path
-              d="M44 8 L 36 6 M44 8 L 40 16"
-              stroke={COLORS.primary}
-              strokeWidth={3}
-              fill="none"
-              strokeLinecap="round"
-            />
-          </Svg>
         </View>
 
         <View style={styles.skillsList}>
-          {SKILLS.map((s) => (
-            <SkillCard key={s.label} label={s.label} progress={s.progress} />
+          {SKILLS.map((s, i) => (
+            <View
+              key={s.label}
+              style={[styles.skillRow, i < SKILLS.length - 1 && styles.skillRowDivider]}
+            >
+              <Text style={styles.skillRowText}>{s.label}</Text>
+              <Text style={styles.skillRowPercent}>{s.progress}%</Text>
+            </View>
           ))}
         </View>
       </ScrollView>
@@ -133,64 +105,35 @@ export default function ProgressScreen({
   );
 }
 
-function PieChart({ percent }) {
-  if (!ChartReady || !PieComponent) {
-    return <FallbackPie percent={percent} />;
-  }
-  const data = {
-    datasets: [
-      {
-        data: [percent, 100 - percent],
-        backgroundColor: [COLORS.primary, COLORS.inputBg],
-        borderWidth: 0,
-        hoverOffset: 0,
-      },
-    ],
-  };
-  const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-    animation: { duration: 600 },
-    plugins: {
-      legend: { display: false },
-      tooltip: { enabled: false },
-    },
-  };
-  return (
-    <View style={styles.chartCanvas}>
-      <PieComponent data={data} options={options} />
-    </View>
-  );
-}
+function ProgressRing({ percent, size = 200, stroke = 18 }) {
+  const radius = (size - stroke) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference * (1 - percent / 100);
+  const center = size / 2;
 
-function FallbackPie({ percent }) {
-  const r = 110;
-  const cx = 130;
-  const cy = 130;
-  const angle = (percent / 100) * 2 * Math.PI;
-  const x = cx + r * Math.sin(angle);
-  const y = cy - r * Math.cos(angle);
-  const largeArc = percent > 50 ? 1 : 0;
-  const pathPrimary = `M ${cx} ${cy} L ${cx} ${cy - r} A ${r} ${r} 0 ${largeArc} 1 ${x} ${y} Z`;
   return (
-    <Svg width={260} height={260} viewBox="0 0 260 260">
-      <Path d={`M ${cx} ${cy} m -${r} 0 a ${r} ${r} 0 1 0 ${r * 2} 0 a ${r} ${r} 0 1 0 -${r * 2} 0`} fill={COLORS.inputBg} />
-      <Path d={pathPrimary} fill={COLORS.primary} />
+    <Svg width={size} height={size}>
+      <Circle
+        cx={center}
+        cy={center}
+        r={radius}
+        stroke={COLORS.inputBg}
+        strokeWidth={stroke}
+        fill="none"
+      />
+      <Circle
+        cx={center}
+        cy={center}
+        r={radius}
+        stroke={COLORS.primary}
+        strokeWidth={stroke}
+        fill="none"
+        strokeLinecap="round"
+        strokeDasharray={circumference}
+        strokeDashoffset={offset}
+        transform={`rotate(-90 ${center} ${center})`}
+      />
     </Svg>
-  );
-}
-
-function SkillCard({ label, progress }) {
-  return (
-    <View style={styles.skillCard}>
-      <View style={styles.skillCardHeader}>
-        <Text style={styles.skillLabel}>{label}</Text>
-        <Text style={styles.skillPercent}>{progress}%</Text>
-      </View>
-      <View style={styles.skillTrack}>
-        <View style={[styles.skillFill, { width: `${progress}%` }]} />
-      </View>
-    </View>
   );
 }
 
@@ -246,20 +189,17 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     marginBottom: 16,
     lineHeight: 24,
+    textAlign: 'center',
   },
-  chartWrapper: {
-    width: 260,
-    height: 260,
+  ringWrapper: {
+    width: 320,
+    height: 320,
     alignSelf: 'center',
     marginTop: 8,
-    marginBottom: 28,
+    marginBottom: 36,
     position: 'relative',
   },
-  chartCanvas: {
-    width: 260,
-    height: 260,
-  },
-  chartCenter: {
+  ringCenter: {
     position: 'absolute',
     top: 0,
     left: 0,
@@ -268,52 +208,40 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  chartCenterText: {
+  ringPercent: {
     fontFamily: 'Montserrat_700Bold',
-    fontSize: 18,
-    color: COLORS.background,
-    textAlign: 'center',
-    lineHeight: 24,
+    fontSize: 64,
+    color: COLORS.primary,
+    lineHeight: 68,
   },
-  chartArrow: {
-    position: 'absolute',
-    top: 30,
-    left: 60,
+  ringLabel: {
+    fontFamily: 'Montserrat_600SemiBold',
+    fontSize: 18,
+    color: COLORS.link,
+    marginTop: 6,
   },
   skillsList: {
-    gap: 14,
-  },
-  skillCard: {
-    backgroundColor: COLORS.white,
     borderRadius: 18,
-    paddingVertical: 16,
     paddingHorizontal: 20,
-    gap: 12,
   },
-  skillCardHeader: {
+  skillRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingVertical: 16,
   },
-  skillLabel: {
-    fontFamily: 'Montserrat_700Bold',
+  skillRowDivider: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#9aa5aa',
+  },
+  skillRowText: {
+    fontFamily: 'Montserrat_600SemiBold',
     fontSize: 15,
     color: COLORS.primary,
   },
-  skillPercent: {
+  skillRowPercent: {
     fontFamily: 'Montserrat_700Bold',
     fontSize: 15,
     color: COLORS.link,
-  },
-  skillTrack: {
-    height: 10,
-    borderRadius: 999,
-    backgroundColor: COLORS.background,
-    overflow: 'hidden',
-  },
-  skillFill: {
-    height: '100%',
-    borderRadius: 999,
-    backgroundColor: COLORS.primary,
   },
 });

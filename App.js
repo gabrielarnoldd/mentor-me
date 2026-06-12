@@ -35,10 +35,20 @@ export default function App() {
   const [screen, setScreen] = useState('login');
   const [quizTopic, setQuizTopic] = useState('');
   const [videoTitle, setVideoTitle] = useState('');
+  const [quizResults, setQuizResults] = useState({
+    'Como criar um currículo acertivo': { score: 7, total: 10 },
+    'Como se conectar com as pessoas certas': { score: 9, total: 10 },
+    'Perfil Profissional': { score: 4, total: 10 },
+  });
 
   const startQuiz = (topic) => {
     setQuizTopic(topic);
     setScreen('quizQuestion');
+  };
+
+  const saveQuizResult = (score, total) => {
+    setQuizResults((prev) => ({ ...prev, [quizTopic]: { score, total } }));
+    setScreen('quiz');
   };
 
   const playVideo = (title) => {
@@ -103,12 +113,13 @@ export default function App() {
           onNavigate={setScreen}
           onHome={() => setScreen('home')}
           onSelectTopic={startQuiz}
+          quizResults={quizResults}
         />
       )}
       {screen === 'quizQuestion' && (
         <QuizQuestionScreen
           topic={quizTopic}
-          onFinish={() => setScreen('quiz')}
+          onFinish={saveQuizResult}
           onLogout={() => setScreen('login')}
           onNavigate={setScreen}
           onHome={() => setScreen('home')}
