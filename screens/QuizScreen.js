@@ -118,14 +118,14 @@ export default function QuizScreen({
 
         <Pressable
           style={({ pressed }) => [styles.seeMoreButton, pressed && { opacity: 0.85 }]}
-          onPress={() => {}}
+          onPress={() => onNavigate?.('progress')}
         >
           <Text style={styles.seeMoreText}>Mostrar Mais</Text>
           <ChevronDown size={18} color={COLORS.primary} strokeWidth={2.5} />
         </Pressable>
       </ScrollView>
 
-      <Pressable style={styles.fab} onPress={() => {}}>
+      <Pressable style={styles.fab} onPress={onHome}>
         <ChevronDown size={26} color={COLORS.primary} />
       </Pressable>
 

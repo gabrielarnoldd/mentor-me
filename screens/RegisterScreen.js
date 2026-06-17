@@ -20,13 +20,27 @@ const COLORS = {
   primary: '#02457C',
 };
 
-export default function RegisterScreen({ onLogin }) {
+export default function RegisterScreen({ onRegister, onLogin, loading, error }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [localError, setLocalError] = useState('');
+
+  const handleSubmit = () => {
+    if (!name || !email || !password || !confirmPassword) {
+      setLocalError('Preencha todos os campos');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setLocalError('As senhas não coincidem');
+      return;
+    }
+    setLocalError('');
+    onRegister?.({ name, email, password });
+  };
 
   return (
     <KeyboardAvoidingView
@@ -51,6 +65,7 @@ export default function RegisterScreen({ onLogin }) {
             icon={<User size={22} color={COLORS.primary} />}
             value={name}
             onChangeText={setName}
+            placeholder="Nome Completo"
             autoCapitalize="words"
           />
 
@@ -58,6 +73,7 @@ export default function RegisterScreen({ onLogin }) {
             icon={<AtSign size={22} color={COLORS.primary} />}
             value={email}
             onChangeText={setEmail}
+            placeholder="E-mail"
             autoCapitalize="none"
             keyboardType="email-address"
           />
@@ -66,6 +82,7 @@ export default function RegisterScreen({ onLogin }) {
             icon={<Unlock size={22} color={COLORS.primary} />}
             value={password}
             onChangeText={setPassword}
+            placeholder="Senha"
             secureTextEntry={!showPassword}
             rightIcon={
               showPassword ? (
@@ -81,6 +98,7 @@ export default function RegisterScreen({ onLogin }) {
             icon={<Lock size={22} color={COLORS.primary} />}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
+            placeholder="Confirmar senha"
             secureTextEntry={!showConfirm}
             rightIcon={
               showConfirm ? (
@@ -93,12 +111,16 @@ export default function RegisterScreen({ onLogin }) {
           />
         </View>
 
+        {localError || error ? (
+          <Text style={styles.errorText}>{localError || error}</Text>
+        ) : null}
         <Pressable
           style={({ pressed }) => [
             styles.registerButton,
             pressed && styles.registerButtonPressed,
           ]}
-          onPress={() => {}}
+          onPress={handleSubmit}
+          disabled={loading}
         >
           <Text style={styles.registerButtonText}>Cadastrar</Text>
         </Pressable>
@@ -243,5 +265,12 @@ const styles = StyleSheet.create({
   logo: {
     width: 90,
     height: 90,
+  },
+  errorText: {
+    fontFamily: 'Montserrat_600SemiBold',
+    fontSize: 14,
+    color: '#DC2626',
+    marginBottom: 10,
+    textAlign: 'center',
   },
 });

@@ -90,7 +90,7 @@ export default function VideoPlayerScreen({
           </Pressable>
         </View>
 
-        <Pressable style={styles.nextVideo} hitSlop={8}>
+        <Pressable style={styles.nextVideo} hitSlop={8} onPress={onHome}>
           <Text style={styles.nextVideoText}>Próximo vídeo </Text>
           <ArrowRight size={18} color={COLORS.primary} strokeWidth={2.5} />
         </Pressable>

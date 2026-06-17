@@ -20,11 +20,9 @@ const COLORS = {
   primary: '#02457C',
 };
 
-export default function LoginScreen({ onLogin, onForgotPassword, onRegister }) {
-  const [username, setUsername] = useState('');
+export default function LoginScreen({ onLogin, onForgotPassword, onRegister, loading, error }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showEmail, setShowEmail] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
 
   return (
@@ -43,29 +41,12 @@ export default function LoginScreen({ onLogin, onForgotPassword, onRegister }) {
 
         <View style={styles.form}>
           <Field
-            icon={<User size={22} color={COLORS.primary} />}
-            value={username}
-            onChangeText={setUsername}
-            placeholder="Usuário"
-            autoCapitalize="none"
-          />
-
-          <Field
             icon={<Mail size={22} color={COLORS.primary} />}
             value={email}
             onChangeText={setEmail}
             placeholder="E-mail"
             autoCapitalize="none"
             keyboardType="email-address"
-            secureTextEntry={!showEmail}
-            rightIcon={
-              showEmail ? (
-                <EyeOff size={20} color={COLORS.primary} />
-              ) : (
-                <Eye size={20} color={COLORS.primary} />
-              )
-            }
-            onRightIconPress={() => setShowEmail((v) => !v)}
           />
 
           <Field
@@ -85,12 +66,14 @@ export default function LoginScreen({ onLogin, onForgotPassword, onRegister }) {
           />
         </View>
 
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
         <Pressable
           style={({ pressed }) => [
             styles.loginButton,
             pressed && styles.loginButtonPressed,
           ]}
-          onPress={onLogin}
+          onPress={() => onLogin?.({ email, password })}
+          disabled={loading}
         >
           <Text style={styles.loginButtonText}>Login</Text>
         </Pressable>
@@ -248,5 +231,13 @@ const styles = StyleSheet.create({
   logo: {
     width: 90,
     height: 90,
+  },
+  errorText: {
+    fontFamily: 'Montserrat_600SemiBold',
+    fontSize: 14,
+    color: '#DC2626',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
   },
 });

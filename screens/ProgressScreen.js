@@ -192,8 +192,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   ringWrapper: {
-    width: 320,
-    height: 320,
+    width: '100%',
+    maxWidth: 320,
+    aspectRatio: 1,
     alignSelf: 'center',
     marginTop: 8,
     marginBottom: 36,

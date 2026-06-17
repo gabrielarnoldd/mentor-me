@@ -19,6 +19,7 @@ import QuizScreen from './screens/QuizScreen';
 import QuizQuestionScreen from './screens/QuizQuestionScreen';
 import ProgressScreen from './screens/ProgressScreen';
 import VideoPlayerScreen from './screens/VideoPlayerScreen';
+import { login, register, updateUser } from './api';
 
 export default function App() {
   const [paytoneLoaded] = usePaytoneOne({ PaytoneOne_400Regular });
@@ -33,6 +34,13 @@ export default function App() {
   });
 
   const [screen, setScreen] = useState('login');
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loginError, setLoginError] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [registerError, setRegisterError] = useState('');
+  const [registerLoading, setRegisterLoading] = useState(false);
+  const [profileError, setProfileError] = useState('');
+  const [profileLoading, setProfileLoading] = useState(false);
   const [quizTopic, setQuizTopic] = useState('');
   const [videoTitle, setVideoTitle] = useState('');
   const [quizResults, setQuizResults] = useState({
@@ -56,6 +64,52 @@ export default function App() {
     setScreen('videoPlayer');
   };
 
+  const handleLogin = async ({ email, password }) => {
+    setLoginError('');
+    setLoginLoading(true);
+    try {
+      const user = await login({ email, password });
+      setCurrentUser(user);
+      setScreen('home');
+    } catch (error) {
+      setLoginError(error.message);
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  const handleRegister = async ({ name, email, password }) => {
+    setRegisterError('');
+    setRegisterLoading(true);
+    try {
+      await register({ name, email, password });
+      setScreen('login');
+    } catch (error) {
+      setRegisterError(error.message);
+    } finally {
+      setRegisterLoading(false);
+    }
+  };
+
+  const handleUpdateProfile = async (payload) => {
+    if (!currentUser?.id) return;
+    setProfileError('');
+    setProfileLoading(true);
+    try {
+      const updated = await updateUser(currentUser.id, payload);
+      setCurrentUser(updated);
+    } catch (error) {
+      setProfileError(error.message);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    setScreen('login');
+  };
+
   const ready = paytoneLoaded && montserratLoaded && natsLoaded;
 
   if (!ready) {
@@ -71,9 +125,11 @@ export default function App() {
       <StatusBar style="dark" />
       {screen === 'login' && (
         <LoginScreen
-          onLogin={() => setScreen('home')}
+          onLogin={handleLogin}
           onForgotPassword={() => setScreen('forgot')}
           onRegister={() => setScreen('register')}
+          loading={loginLoading}
+          error={loginError}
         />
       )}
       {screen === 'forgot' && (
@@ -83,11 +139,17 @@ export default function App() {
         />
       )}
       {screen === 'register' && (
-        <RegisterScreen onLogin={() => setScreen('login')} />
+        <RegisterScreen
+          onRegister={handleRegister}
+          onLogin={() => setScreen('login')}
+          loading={registerLoading}
+          error={registerError}
+        />
       )}
       {screen === 'home' && (
         <HomeScreen
-          onLogout={() => setScreen('login')}
+          username={currentUser?.name || '(usuário)'}
+          onLogout={handleLogout}
           onNavigate={setScreen}
           onPlayVideo={playVideo}
         />
@@ -102,7 +164,11 @@ export default function App() {
       )}
       {screen === 'profile' && (
         <ProfileScreen
-          onLogout={() => setScreen('login')}
+          currentUser={currentUser}
+          onUpdateProfile={handleUpdateProfile}
+          loading={profileLoading}
+          error={profileError}
+          onLogout={handleLogout}
           onNavigate={setScreen}
           onHome={() => setScreen('home')}
         />

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Image,
   Platform,
@@ -33,12 +33,21 @@ const HISTORY = [
   { id: '3', title: 'Perfil\nProfissional' },
 ];
 
-export default function ProfileScreen({ onLogout, onNavigate, onHome }) {
-  const [name, setName] = useState('Ana Beatriz Arteiro Barreiro');
-  const [email, setEmail] = useState('anabeatrizarteiro@gmail.com');
-  const [username, setUsername] = useState('@aanabarreiro');
-  const [password, setPassword] = useState('**********');
+export default function ProfileScreen({ currentUser, onUpdateProfile, loading, error, onLogout, onNavigate, onHome }) {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (currentUser) {
+      setName(currentUser.name || '');
+      setEmail(currentUser.email || '');
+      setPassword('');
+      setSuccessMessage('');
+    }
+  }, [currentUser]);
 
   return (
     <View style={styles.flex}>
@@ -74,19 +83,39 @@ export default function ProfileScreen({ onLogout, onNavigate, onHome }) {
         </View>
 
         <View style={styles.form}>
-          <EditField value={name} onChangeText={setName} />
+          <EditField
+            value={name}
+            onChangeText={setName}
+            placeholder="Nome completo"
+          />
           <EditField
             value={email}
             onChangeText={setEmail}
+            placeholder="E-mail"
             keyboardType="email-address"
             autoCapitalize="none"
           />
           <EditField
-            value={username}
-            onChangeText={setUsername}
-            autoCapitalize="none"
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Nova senha"
+            secureTextEntry
           />
-          <EditField value={password} onChangeText={setPassword} />
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+          {successMessage ? <Text style={styles.successText}>{successMessage}</Text> : null}
+          <Pressable
+            style={({ pressed }) => [styles.saveButton, pressed && { opacity: 0.85 }]}
+            onPress={async () => {
+              await onUpdateProfile?.({ name, email, password: password || undefined });
+              if (!error) {
+                setSuccessMessage('Perfil atualizado com sucesso');
+                setPassword('');
+              }
+            }}
+            disabled={loading}
+          >
+            <Text style={styles.saveButtonText}>{loading ? 'Salvando...' : 'Salvar alterações'}</Text>
+          </Pressable>
         </View>
 
         <Text style={styles.sectionTitle}>Você já assistiu:</Text>
@@ -227,6 +256,33 @@ const styles = StyleSheet.create({
     gap: 14,
     marginBottom: 28,
   },
+  saveButton: {
+    marginTop: 16,
+    backgroundColor: COLORS.primary,
+    borderRadius: 14,
+    height: 52,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  saveButtonText: {
+    fontFamily: 'Montserrat_700Bold',
+    fontSize: 16,
+    color: COLORS.white,
+  },
+  successText: {
+    fontFamily: 'Montserrat_600SemiBold',
+    fontSize: 14,
+    color: '#16A34A',
+    marginTop: 10,
+    textAlign: 'center',
+  },
+  errorText: {
+    fontFamily: 'Montserrat_600SemiBold',
+    fontSize: 14,
+    color: '#DC2626',
+    marginTop: 10,
+    textAlign: 'center',
+  },
   fieldRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -239,6 +295,33 @@ const styles = StyleSheet.create({
     height: 50,
     paddingHorizontal: 22,
     justifyContent: 'center',
+  },
+  saveButton: {
+    marginTop: 16,
+    backgroundColor: COLORS.primary,
+    borderRadius: 14,
+    height: 52,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  saveButtonText: {
+    fontFamily: 'Montserrat_700Bold',
+    fontSize: 16,
+    color: COLORS.white,
+  },
+  successText: {
+    fontFamily: 'Montserrat_600SemiBold',
+    fontSize: 14,
+    color: '#16A34A',
+    marginTop: 10,
+    textAlign: 'center',
+  },
+  errorText: {
+    fontFamily: 'Montserrat_600SemiBold',
+    fontSize: 14,
+    color: '#DC2626',
+    marginTop: 10,
+    textAlign: 'center',
   },
   input: {
     fontFamily: 'Montserrat_700Bold',

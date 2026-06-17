@@ -56,6 +56,7 @@ export default function ForgotPasswordScreen({ onFinish, onBack }) {
             icon={<ShieldCheck size={22} color={COLORS.primary} />}
             value={code}
             onChangeText={setCode}
+            placeholder="Código de verificação"
             keyboardType="number-pad"
           />
 
@@ -63,6 +64,7 @@ export default function ForgotPasswordScreen({ onFinish, onBack }) {
             icon={<Unlock size={22} color={COLORS.primary} />}
             value={newPassword}
             onChangeText={setNewPassword}
+            placeholder="Nova senha"
             secureTextEntry={!showNew}
             rightIcon={
               showNew ? (
@@ -78,6 +80,7 @@ export default function ForgotPasswordScreen({ onFinish, onBack }) {
             icon={<Lock size={22} color={COLORS.primary} />}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
+            placeholder="Confirmar senha"
             secureTextEntry={!showConfirm}
             rightIcon={
               showConfirm ? (

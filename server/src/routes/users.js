@@ -1,7 +1,33 @@
 const express = require('express');
+const bcrypt = require('bcrypt');
 const { query } = require('../db');
 
 const router = express.Router();
+
+router.post('/login', async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: 'E-mail e senha são obrigatórios' });
+    }
+
+    const users = await query('SELECT id, name, email, password, created_at FROM users WHERE email = ?', [email]);
+    const user = users[0];
+
+    if (!user) {
+      return res.status(401).json({ error: 'E-mail ou senha inválidos' });
+    }
+
+    const passwordMatches = await bcrypt.compare(password, user.password);
+    if (!passwordMatches) {
+      return res.status(401).json({ error: 'E-mail ou senha inválidos' });
+    }
+
+    res.json({ id: user.id, name: user.name, email: user.email, created_at: user.created_at });
+  } catch (error) {
+    next(error);
+  }
+});
 
 router.get('/', async (req, res, next) => {
   try {
@@ -39,9 +65,10 @@ router.post('/', async (req, res, next) => {
       return res.status(400).json({ error: 'name, email e password são obrigatórios' });
     }
 
+    const hashedPassword = await bcrypt.hash(password, 10);
     const result = await query(
       'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
-      [name, email, password]
+      [name, email, hashedPassword]
     );
 
     const newUsers = await query('SELECT id, name, email, created_at FROM users WHERE id = ?', [result.insertId]);
@@ -71,8 +98,9 @@ router.put('/:id', async (req, res, next) => {
       values.push(email);
     }
     if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10);
       updates.push('password = ?');
-      values.push(password);
+      values.push(hashedPassword);
     }
 
     if (updates.length === 0) {

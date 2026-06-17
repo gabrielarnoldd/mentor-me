@@ -91,14 +91,14 @@ export default function HomeScreen({
 
         <Pressable
           style={({ pressed }) => [styles.seeMoreButton, pressed && { opacity: 0.85 }]}
-          onPress={() => {}}
+          onPress={() => onNavigate?.('quiz')}
         >
           <Text style={styles.seeMoreText}>Mostrar Mais</Text>
           <ChevronDown size={18} color={COLORS.primary} strokeWidth={2.5} />
         </Pressable>
       </ScrollView>
 
-      <Pressable style={styles.fab} onPress={() => {}}>
+      <Pressable style={styles.fab} onPress={() => onNavigate?.('profile')}>
         <ChevronDown size={26} color={COLORS.primary} />
       </Pressable>
 
