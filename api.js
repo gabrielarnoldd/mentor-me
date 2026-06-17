@@ -1,11 +1,14 @@
-const API_BASE_URL = 'http://localhost:4000';
+export const API_BASE_URL = 'http://localhost:4000';
 
 async function fetchJson(path, options = {}) {
+  const { headers, ...fetchOptions } = options;
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
   const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...fetchOptions,
     headers: {
-      'Content-Type': 'application/json',
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+      ...headers,
     },
-    ...options,
   });
 
   if (response.status === 204) {
@@ -42,6 +45,43 @@ export async function updateUser(id, payload) {
   });
 }
 
+export async function uploadProfilePhoto(id, asset) {
+  const formData = new FormData();
+  const fileName = asset.fileName || asset.uri?.split('/').pop() || `profile-${Date.now()}.jpg`;
+  const type = asset.mimeType || 'image/jpeg';
+
+  if (asset.file) {
+    formData.append('profilePhoto', asset.file, fileName);
+  } else {
+    formData.append('profilePhoto', {
+      uri: asset.uri,
+      name: fileName,
+      type,
+    });
+  }
+
+  return fetchJson(`/users/${id}/profile-photo`, {
+    method: 'POST',
+    body: formData,
+  });
+}
+
 export async function getUser(id) {
   return fetchJson(`/users/${id}`);
+}
+
+export async function getVideoProgress(userId) {
+  return fetchJson(`/videos/users/${userId}/progress`);
+}
+
+export async function startVideo(userId, videoId) {
+  return fetchJson(`/videos/users/${userId}/${videoId}/start`, {
+    method: 'POST',
+  });
+}
+
+export async function finishVideo(userId, videoId) {
+  return fetchJson(`/videos/users/${userId}/${videoId}/finish`, {
+    method: 'POST',
+  });
 }

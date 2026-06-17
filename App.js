@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useFonts as usePaytoneOne, PaytoneOne_400Regular } from '@expo-google-fonts/paytone-one';
@@ -19,7 +19,15 @@ import QuizScreen from './screens/QuizScreen';
 import QuizQuestionScreen from './screens/QuizQuestionScreen';
 import ProgressScreen from './screens/ProgressScreen';
 import VideoPlayerScreen from './screens/VideoPlayerScreen';
-import { login, register, updateUser } from './api';
+import {
+  finishVideo,
+  getVideoProgress,
+  login,
+  register,
+  startVideo,
+  updateUser,
+  uploadProfilePhoto,
+} from './api';
 
 export default function App() {
   const [paytoneLoaded] = usePaytoneOne({ PaytoneOne_400Regular });
@@ -42,7 +50,8 @@ export default function App() {
   const [profileError, setProfileError] = useState('');
   const [profileLoading, setProfileLoading] = useState(false);
   const [quizTopic, setQuizTopic] = useState('');
-  const [videoTitle, setVideoTitle] = useState('');
+  const [selectedVideo, setSelectedVideo] = useState(null);
+  const [videoProgress, setVideoProgress] = useState({ watchedCount: 0, totalVideos: 0, videos: [] });
   const [quizResults, setQuizResults] = useState({
     'Como criar um currículo acertivo': { score: 7, total: 10 },
     'Como se conectar com as pessoas certas': { score: 9, total: 10 },
@@ -59,9 +68,50 @@ export default function App() {
     setScreen('quiz');
   };
 
-  const playVideo = (title) => {
-    setVideoTitle(title);
+  const loadVideoProgress = async (userId = currentUser?.id) => {
+    if (!userId) return;
+
+    try {
+      const progress = await getVideoProgress(userId);
+      setVideoProgress(progress);
+    } catch (error) {
+      console.warn('Erro ao carregar progresso dos videos:', error.message);
+    }
+  };
+
+  useEffect(() => {
+    if (currentUser?.id) {
+      loadVideoProgress(currentUser.id);
+    } else {
+      setVideoProgress({ watchedCount: 0, totalVideos: 0, videos: [] });
+    }
+  }, [currentUser?.id]);
+
+  const playVideo = async (video) => {
+    setSelectedVideo(video);
     setScreen('videoPlayer');
+
+    if (currentUser?.id && video?.id) {
+      try {
+        const progress = await startVideo(currentUser.id, video.id);
+        setVideoProgress(progress);
+      } catch (error) {
+        console.warn('Erro ao iniciar video:', error.message);
+      }
+    }
+  };
+
+  const finishCurrentVideo = async () => {
+    if (currentUser?.id && selectedVideo?.id) {
+      try {
+        const progress = await finishVideo(currentUser.id, selectedVideo.id);
+        setVideoProgress(progress);
+      } catch (error) {
+        console.warn('Erro ao finalizar video:', error.message);
+      }
+    }
+
+    setScreen('home');
   };
 
   const handleLogin = async ({ email, password }) => {
@@ -98,8 +148,26 @@ export default function App() {
     try {
       const updated = await updateUser(currentUser.id, payload);
       setCurrentUser(updated);
+      return updated;
     } catch (error) {
       setProfileError(error.message);
+      throw error;
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  const handleUploadProfilePhoto = async (asset) => {
+    if (!currentUser?.id) return;
+    setProfileError('');
+    setProfileLoading(true);
+    try {
+      const updated = await uploadProfilePhoto(currentUser.id, asset);
+      setCurrentUser(updated);
+      return updated;
+    } catch (error) {
+      setProfileError(error.message);
+      throw error;
     } finally {
       setProfileLoading(false);
     }
@@ -156,16 +224,18 @@ export default function App() {
       )}
       {screen === 'videoPlayer' && (
         <VideoPlayerScreen
-          title={videoTitle}
+          title={selectedVideo?.title}
           onLogout={() => setScreen('login')}
           onNavigate={setScreen}
           onHome={() => setScreen('home')}
+          onFinish={finishCurrentVideo}
         />
       )}
       {screen === 'profile' && (
         <ProfileScreen
           currentUser={currentUser}
           onUpdateProfile={handleUpdateProfile}
+          onUploadProfilePhoto={handleUploadProfilePhoto}
           loading={profileLoading}
           error={profileError}
           onLogout={handleLogout}
@@ -193,6 +263,9 @@ export default function App() {
       )}
       {screen === 'progress' && (
         <ProgressScreen
+          username={currentUser?.name || '(usuÃ¡rio)'}
+          videoProgress={videoProgress}
+          onRefreshProgress={() => loadVideoProgress()}
           onLogout={() => setScreen('login')}
           onNavigate={setScreen}
           onHome={() => setScreen('home')}

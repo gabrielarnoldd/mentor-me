@@ -19,7 +19,13 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O Mentor Me usa suas fotos para atualizar sua foto de perfil."
+        }
+      ]
     ]
   }
 }

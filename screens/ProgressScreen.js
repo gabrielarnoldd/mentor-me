@@ -33,11 +33,16 @@ const averageProgress = Math.round(
 
 export default function ProgressScreen({
   username = 'Ana Beatriz Arteiro Barreiro',
+  videoProgress = { watchedCount: 0, totalVideos: 0, videos: [] },
+  onRefreshProgress,
   onLogout,
   onNavigate,
   onHome,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const watchedPercent = videoProgress.totalVideos
+    ? Math.round((videoProgress.watchedCount / videoProgress.totalVideos) * 100)
+    : 0;
 
   return (
     <View style={styles.flex}>
@@ -66,18 +71,40 @@ export default function ProgressScreen({
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        onScrollBeginDrag={onRefreshProgress}
       >
+        <View style={styles.videoSummary}>
+          <Text style={styles.videoSummaryNumber}>
+            {videoProgress.watchedCount}/{videoProgress.totalVideos}
+          </Text>
+          <Text style={styles.videoSummaryLabel}>videos assistidos</Text>
+        </View>
+
         <Text style={styles.sectionTitle}>
           Seu progresso nas competências
         </Text>
 
         <View style={styles.ringWrapper}>
-          <ProgressRing percent={averageProgress} size={320} stroke={26} />
+          <ProgressRing percent={watchedPercent || averageProgress} size={320} stroke={26} />
           <View pointerEvents="none" style={styles.ringCenter}>
-            <Text style={styles.ringPercent}>{averageProgress}%</Text>
+            <Text style={styles.ringPercent}>{watchedPercent || averageProgress}%</Text>
             <Text style={styles.ringLabel}>Progresso médio</Text>
           </View>
         </View>
+
+        {videoProgress.videos?.length ? (
+          <View style={styles.videoList}>
+            {videoProgress.videos.map((video, index) => (
+              <View
+                key={video.id}
+                style={[styles.videoRow, index < videoProgress.videos.length - 1 && styles.skillRowDivider]}
+              >
+                <Text style={styles.videoRowTitle}>{video.title}</Text>
+                <Text style={styles.videoRowStatus}>{video.watched ? 'Assistido' : 'Nao assistido'}</Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
 
         <View style={styles.skillsList}>
           {SKILLS.map((s, i) => (
@@ -191,6 +218,22 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     textAlign: 'center',
   },
+  videoSummary: {
+    alignSelf: 'center',
+    alignItems: 'center',
+    marginBottom: 18,
+  },
+  videoSummaryNumber: {
+    fontFamily: 'Montserrat_700Bold',
+    fontSize: 34,
+    color: COLORS.primary,
+    lineHeight: 38,
+  },
+  videoSummaryLabel: {
+    fontFamily: 'Montserrat_600SemiBold',
+    fontSize: 14,
+    color: COLORS.link,
+  },
   ringWrapper: {
     width: '100%',
     maxWidth: 320,
@@ -224,6 +267,26 @@ const styles = StyleSheet.create({
   skillsList: {
     borderRadius: 18,
     paddingHorizontal: 20,
+  },
+  videoList: {
+    borderRadius: 18,
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
+  videoRow: {
+    paddingVertical: 14,
+    gap: 4,
+  },
+  videoRowTitle: {
+    fontFamily: 'Montserrat_600SemiBold',
+    fontSize: 14,
+    color: COLORS.primary,
+    lineHeight: 18,
+  },
+  videoRowStatus: {
+    fontFamily: 'Montserrat_700Bold',
+    fontSize: 13,
+    color: COLORS.link,
   },
   skillRow: {
     flexDirection: 'row',

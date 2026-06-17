@@ -23,21 +23,21 @@ const COLORS = {
 
 const CARDS = [
   {
-    id: '1',
+    id: 'curriculo',
     title: 'Como criar um\ncurrículo acertivo',
     duration: '0:45',
     date: '08 Jun 2026',
     image: require('../assets/fotoCurso1.jpg'),
   },
   {
-    id: '2',
+    id: 'conexoes',
     title: 'Como se conectar\ncom as pessoas certas',
     duration: '0:30',
     date: '02 Jun 2026',
     image: require('../assets/fotoCurso2.jpg'),
   },
   {
-    id: '3',
+    id: 'imagem-profissional',
     title: 'De bom dia a bom dia,\na sua imagem se cria',
     duration: '1:00',
     date: '28 Mai 2026',
@@ -85,7 +85,7 @@ export default function HomeScreen({
             duration={card.duration}
             date={card.date}
             image={card.image}
-            onPress={() => onPlayVideo?.(card.title.replace(/\n/g, ' '))}
+            onPress={() => onPlayVideo?.({ ...card, title: card.title.replace(/\n/g, ' ') })}
           />
         ))}
 

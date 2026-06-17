@@ -38,12 +38,35 @@ CREATE TABLE IF NOT EXISTS users (
   name VARCHAR(255) NOT NULL,
   email VARCHAR(255) UNIQUE NOT NULL,
   password VARCHAR(255) NOT NULL,
+  profile_photo_url VARCHAR(500),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 -- Criar índice no email para melhorar performance
 CREATE INDEX idx_email ON users(email);
+
+CREATE TABLE IF NOT EXISTS videos (
+  id VARCHAR(80) PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  duration_seconds INT NOT NULL DEFAULT 0,
+  display_order INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS user_video_progress (
+  user_id INT NOT NULL,
+  video_id VARCHAR(80) NOT NULL,
+  watched BOOLEAN NOT NULL DEFAULT FALSE,
+  started_at DATETIME NULL,
+  finished_at DATETIME NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, video_id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (video_id) REFERENCES videos(id) ON DELETE CASCADE
+);
 ```
 
 **Opção B: Via CLI**
@@ -67,8 +90,26 @@ npm run dev
 - name (VARCHAR 255)
 - email (VARCHAR 255, UNIQUE)
 - password (VARCHAR 255, hashed)
+- profile_photo_url (VARCHAR 500, nullable)
 - created_at (TIMESTAMP)
 - updated_at (TIMESTAMP)
+```
+
+### Tabela: `videos`
+```sql
+- id (VARCHAR 80, PK)
+- title (VARCHAR 255)
+- duration_seconds (INT)
+- display_order (INT)
+```
+
+### Tabela: `user_video_progress`
+```sql
+- user_id (INT, FK users.id)
+- video_id (VARCHAR 80, FK videos.id)
+- watched (BOOLEAN)
+- started_at (DATETIME)
+- finished_at (DATETIME)
 ```
 
 ## 🔌 API Endpoints
@@ -107,8 +148,27 @@ PUT /users/1
   "password": "nova_senha"
 }
 
+# Enviar foto de perfil (multipart/form-data)
+POST /users/1/profile-photo
+Campo do arquivo: profilePhoto
+
 # Deletar
 DELETE /users/1
+```
+
+### Progresso dos Videos
+```bash
+# Listar videos
+GET /videos
+
+# Ver progresso do usuario e quantidade assistida
+GET /videos/users/1/progress
+
+# Marcar quando comecou a assistir
+POST /videos/users/1/curriculo/start
+
+# Marcar como assistido e registrar quando terminou
+POST /videos/users/1/curriculo/finish
 ```
 
 ## 🐛 Troubleshooting

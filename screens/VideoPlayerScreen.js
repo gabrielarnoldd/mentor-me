@@ -30,6 +30,7 @@ export default function VideoPlayerScreen({
   onLogout,
   onNavigate,
   onHome,
+  onFinish,
 }) {
   const [playing, setPlaying] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -90,7 +91,7 @@ export default function VideoPlayerScreen({
           </Pressable>
         </View>
 
-        <Pressable style={styles.nextVideo} hitSlop={8} onPress={onHome}>
+        <Pressable style={styles.nextVideo} hitSlop={8} onPress={onFinish || onHome}>
           <Text style={styles.nextVideoText}>Próximo vídeo </Text>
           <ArrowRight size={18} color={COLORS.primary} strokeWidth={2.5} />
         </Pressable>

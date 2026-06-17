@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
+  Alert,
   Image,
   Platform,
   Pressable,
@@ -9,6 +10,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import Svg, { Path } from 'react-native-svg';
 import {
   LogOut,
@@ -17,6 +19,7 @@ import {
   User,
 } from 'lucide-react-native';
 import MenuDrawer from '../components/MenuDrawer';
+import { API_BASE_URL } from '../api';
 
 const COLORS = {
   white: '#FFFDFD',
@@ -33,7 +36,16 @@ const HISTORY = [
   { id: '3', title: 'Perfil\nProfissional' },
 ];
 
-export default function ProfileScreen({ currentUser, onUpdateProfile, loading, error, onLogout, onNavigate, onHome }) {
+export default function ProfileScreen({
+  currentUser,
+  onUpdateProfile,
+  onUploadProfilePhoto,
+  loading,
+  error,
+  onLogout,
+  onNavigate,
+  onHome,
+}) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -48,6 +60,38 @@ export default function ProfileScreen({ currentUser, onUpdateProfile, loading, e
       setSuccessMessage('');
     }
   }, [currentUser]);
+
+  const profilePhotoUri = currentUser?.profile_photo_url
+    ? currentUser.profile_photo_url.startsWith('http')
+      ? currentUser.profile_photo_url
+      : `${API_BASE_URL}${currentUser.profile_photo_url}`
+    : '';
+
+  const pickProfilePhoto = async () => {
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('Permissao necessaria', 'Permita acesso as fotos para escolher sua foto de perfil.');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.85,
+      });
+
+      if (result.canceled || !result.assets?.[0]) {
+        return;
+      }
+
+      await onUploadProfilePhoto?.(result.assets[0]);
+      setSuccessMessage('Foto de perfil atualizada com sucesso');
+    } catch (uploadError) {
+      setSuccessMessage('');
+    }
+  };
 
   return (
     <View style={styles.flex}>
@@ -73,14 +117,22 @@ export default function ProfileScreen({ currentUser, onUpdateProfile, loading, e
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.avatarWrapper}>
+        <Pressable
+          style={({ pressed }) => [styles.avatarWrapper, pressed && { opacity: 0.9 }]}
+          onPress={pickProfilePhoto}
+          disabled={loading}
+        >
           <View style={styles.avatar}>
-            <User size={86} color={COLORS.inputBg} strokeWidth={2} />
+            {profilePhotoUri ? (
+              <Image source={{ uri: profilePhotoUri }} style={styles.avatarImage} resizeMode="cover" />
+            ) : (
+              <User size={86} color={COLORS.inputBg} strokeWidth={2} />
+            )}
           </View>
           <View style={styles.avatarBadge}>
             <Text style={styles.avatarBadgePlus}>+</Text>
           </View>
-        </View>
+        </Pressable>
 
         <View style={styles.form}>
           <EditField
@@ -106,10 +158,12 @@ export default function ProfileScreen({ currentUser, onUpdateProfile, loading, e
           <Pressable
             style={({ pressed }) => [styles.saveButton, pressed && { opacity: 0.85 }]}
             onPress={async () => {
-              await onUpdateProfile?.({ name, email, password: password || undefined });
-              if (!error) {
+              try {
+                await onUpdateProfile?.({ name, email, password: password || undefined });
                 setSuccessMessage('Perfil atualizado com sucesso');
                 setPassword('');
+              } catch (updateError) {
+                setSuccessMessage('');
               }
             }}
             disabled={loading}
@@ -232,6 +286,11 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
   },
   avatarBadge: {
     position: 'absolute',
