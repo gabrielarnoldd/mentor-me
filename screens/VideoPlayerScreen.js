@@ -27,6 +27,7 @@ const COLORS = {
 
 export default function VideoPlayerScreen({
   title = 'Vídeo',
+  progressPercent = 0,
   onLogout,
   onNavigate,
   onHome,
@@ -34,7 +35,7 @@ export default function VideoPlayerScreen({
 }) {
   const [playing, setPlaying] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
-  const progress = 42;
+  const progress = Math.max(0, Math.min(100, Number(progressPercent) || 0));
 
   return (
     <View style={styles.flex}>

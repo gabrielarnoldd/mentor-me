@@ -24,14 +24,15 @@ const COLORS = {
   wrong: '#EF4444',
 };
 
-const CARDS = [
-  { id: '1', title: 'Como criar um\ncurrículo acertivo', image: require('../assets/fotoCurso1.jpg') },
-  { id: '2', title: 'Como se conectar\ncom as pessoas certas', image: require('../assets/fotoCurso2.jpg') },
-  { id: '3', title: 'Perfil Profissional', image: require('../assets/fotoCurso3.jpg') },
-];
+const VIDEO_IMAGES = {
+  curriculo: require('../assets/fotoCurso1.jpg'),
+  conexoes: require('../assets/fotoCurso2.jpg'),
+  'imagem-profissional': require('../assets/fotoCurso4.jpg'),
+};
 
 export default function QuizScreen({
-  username = 'Ana Beatriz Arteiro Barreiro',
+  username = '(usuário)',
+  videos = [],
   onLogout,
   onNavigate,
   onHome,
@@ -43,16 +44,16 @@ export default function QuizScreen({
   const modalOpacity = useRef(new Animated.Value(0)).current;
   const modalScale = useRef(new Animated.Value(0.9)).current;
 
-  const handleCardPress = (rawTitle) => {
-    const key = rawTitle.replace(/\n/g, ' ');
-    if (quizResults[key]) {
-      setConfirmCard({ key, result: quizResults[key] });
+  const handleCardPress = (video) => {
+    const result = quizResults[video.id];
+    if (result) {
+      setConfirmCard({ video, result });
       Animated.parallel([
         Animated.timing(modalOpacity, { toValue: 1, duration: 250, useNativeDriver: true }),
         Animated.spring(modalScale, { toValue: 1, useNativeDriver: true, tension: 80, friction: 8 }),
       ]).start();
     } else {
-      onSelectTopic?.(key);
+      onSelectTopic?.(video);
     }
   };
 
@@ -68,8 +69,8 @@ export default function QuizScreen({
   };
 
   const handleRetry = () => {
-    const topic = confirmCard?.key;
-    closeModal(() => onSelectTopic?.(topic));
+    const video = confirmCard?.video;
+    closeModal(() => onSelectTopic?.(video));
   };
 
   return (
@@ -102,18 +103,20 @@ export default function QuizScreen({
       >
         <Text style={styles.sectionTitle}>Você já respondeu:</Text>
         <View style={styles.cardsContainer}>
-          {CARDS.map((card) => {
-            const key = card.title.replace(/\n/g, ' ');
+          {videos.map((video) => {
             return (
               <Card
-                key={card.id}
-                title={card.title}
-                image={card.image}
-                result={quizResults[key]}
-                onPress={() => handleCardPress(card.title)}
+                key={video.id}
+                title={video.title}
+                image={VIDEO_IMAGES[video.id]}
+                result={quizResults[video.id]}
+                onPress={() => handleCardPress(video)}
               />
             );
           })}
+          {!videos.length && (
+            <Text style={styles.emptyText}>Nenhum quiz disponível</Text>
+          )}
         </View>
 
         <Pressable
@@ -140,7 +143,7 @@ export default function QuizScreen({
               <X size={20} color={COLORS.primary} strokeWidth={2.5} />
             </Pressable>
 
-            <Text style={styles.modalTopic}>{confirmCard.key}</Text>
+            <Text style={styles.modalTopic}>{confirmCard.video.title}</Text>
             <Text style={styles.modalLabel}>Sua pontuação anterior:</Text>
 
             <View style={[
@@ -371,6 +374,13 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat_700Bold',
     fontSize: 15,
     color: COLORS.primary,
+  },
+  emptyText: {
+    fontFamily: 'Montserrat_600SemiBold',
+    fontSize: 15,
+    color: COLORS.primary,
+    textAlign: 'center',
+    paddingHorizontal: 24,
   },
   fab: {
     position: 'absolute',

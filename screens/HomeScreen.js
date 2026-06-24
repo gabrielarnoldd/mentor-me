@@ -21,32 +21,35 @@ const COLORS = {
   cardImage: '#BFC3C8',
 };
 
-const CARDS = [
-  {
-    id: 'curriculo',
-    title: 'Como criar um\ncurrículo acertivo',
-    duration: '0:45',
-    date: '08 Jun 2026',
-    image: require('../assets/fotoCurso1.jpg'),
-  },
-  {
-    id: 'conexoes',
-    title: 'Como se conectar\ncom as pessoas certas',
-    duration: '0:30',
-    date: '02 Jun 2026',
-    image: require('../assets/fotoCurso2.jpg'),
-  },
-  {
-    id: 'imagem-profissional',
-    title: 'De bom dia a bom dia,\na sua imagem se cria',
-    duration: '1:00',
-    date: '28 Mai 2026',
-    image: require('../assets/fotoCurso4.jpg'),
-  },
-];
+const VIDEO_IMAGES = {
+  curriculo: require('../assets/fotoCurso1.jpg'),
+  conexoes: require('../assets/fotoCurso2.jpg'),
+  'imagem-profissional': require('../assets/fotoCurso4.jpg'),
+};
+
+function formatDuration(seconds = 0) {
+  const safeSeconds = Number(seconds) || 0;
+  const minutes = Math.floor(safeSeconds / 60);
+  const remainingSeconds = String(safeSeconds % 60).padStart(2, '0');
+  return `${minutes}:${remainingSeconds}`;
+}
+
+function formatDate(value) {
+  if (!value) return '';
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(date);
+}
 
 export default function HomeScreen({
   username = '(usuário)',
+  videos = [],
   onLogout,
   onNavigate,
   onPlayVideo,
@@ -78,16 +81,19 @@ export default function HomeScreen({
         <View style={styles.welcomePill}>
           <Text style={styles.welcomeText}>Bem-vindo, {username}</Text>
         </View>
-        {CARDS.map((card) => (
+        {videos.map((video) => (
           <Card
-            key={card.id}
-            title={card.title}
-            duration={card.duration}
-            date={card.date}
-            image={card.image}
-            onPress={() => onPlayVideo?.({ ...card, title: card.title.replace(/\n/g, ' ') })}
+            key={video.id}
+            title={video.title}
+            duration={formatDuration(video.duration_seconds)}
+            date={formatDate(video.created_at)}
+            image={VIDEO_IMAGES[video.id]}
+            onPress={() => onPlayVideo?.(video)}
           />
         ))}
+        {!videos.length && (
+          <Text style={styles.emptyText}>Nenhum vídeo disponível</Text>
+        )}
 
         <Pressable
           style={({ pressed }) => [styles.seeMoreButton, pressed && { opacity: 0.85 }]}
@@ -292,6 +298,13 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat_600SemiBold',
     fontSize: 12,
     color: COLORS.primary,
+  },
+  emptyText: {
+    fontFamily: 'Montserrat_600SemiBold',
+    fontSize: 15,
+    color: COLORS.primary,
+    textAlign: 'center',
+    paddingHorizontal: 24,
   },
   seeMoreButton: {
     flexDirection: 'row',

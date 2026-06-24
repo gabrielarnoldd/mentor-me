@@ -19,20 +19,8 @@ const COLORS = {
   primary: '#02457C',
 };
 
-const SKILLS = [
-  { label: 'Currículo', progress: 50 },
-  { label: 'Entrevista', progress: 72 },
-  { label: 'Oratória', progress: 30 },
-  { label: 'Linkedin', progress: 88 },
-  { label: 'Perfil profissional', progress: 55 },
-];
-
-const averageProgress = Math.round(
-  SKILLS.reduce((sum, s) => sum + s.progress, 0) / SKILLS.length
-);
-
 export default function ProgressScreen({
-  username = 'Ana Beatriz Arteiro Barreiro',
+  username = '(usuário)',
   videoProgress = { watchedCount: 0, totalVideos: 0, videos: [] },
   onRefreshProgress,
   onLogout,
@@ -81,14 +69,14 @@ export default function ProgressScreen({
         </View>
 
         <Text style={styles.sectionTitle}>
-          Seu progresso nas competências
+          Seu progresso nos vídeos
         </Text>
 
         <View style={styles.ringWrapper}>
-          <ProgressRing percent={watchedPercent || averageProgress} size={320} stroke={26} />
+          <ProgressRing percent={watchedPercent} size={320} stroke={26} />
           <View pointerEvents="none" style={styles.ringCenter}>
-            <Text style={styles.ringPercent}>{watchedPercent || averageProgress}%</Text>
-            <Text style={styles.ringLabel}>Progresso médio</Text>
+            <Text style={styles.ringPercent}>{watchedPercent}%</Text>
+            <Text style={styles.ringLabel}>Concluído</Text>
           </View>
         </View>
 
@@ -105,18 +93,9 @@ export default function ProgressScreen({
             ))}
           </View>
         ) : null}
-
-        <View style={styles.skillsList}>
-          {SKILLS.map((s, i) => (
-            <View
-              key={s.label}
-              style={[styles.skillRow, i < SKILLS.length - 1 && styles.skillRowDivider]}
-            >
-              <Text style={styles.skillRowText}>{s.label}</Text>
-              <Text style={styles.skillRowPercent}>{s.progress}%</Text>
-            </View>
-          ))}
-        </View>
+        {!videoProgress.videos?.length && (
+          <Text style={styles.emptyText}>Nenhum vídeo encontrado</Text>
+        )}
       </ScrollView>
 
       <MenuDrawer
@@ -264,10 +243,6 @@ const styles = StyleSheet.create({
     color: COLORS.link,
     marginTop: 6,
   },
-  skillsList: {
-    borderRadius: 18,
-    paddingHorizontal: 20,
-  },
   videoList: {
     borderRadius: 18,
     paddingHorizontal: 20,
@@ -288,24 +263,14 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: COLORS.link,
   },
-  skillRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 16,
-  },
   skillRowDivider: {
     borderBottomWidth: 1,
     borderBottomColor: '#9aa5aa',
   },
-  skillRowText: {
+  emptyText: {
     fontFamily: 'Montserrat_600SemiBold',
     fontSize: 15,
     color: COLORS.primary,
-  },
-  skillRowPercent: {
-    fontFamily: 'Montserrat_700Bold',
-    fontSize: 15,
-    color: COLORS.link,
+    textAlign: 'center',
   },
 });

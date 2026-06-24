@@ -21,9 +21,14 @@ import ProgressScreen from './screens/ProgressScreen';
 import VideoPlayerScreen from './screens/VideoPlayerScreen';
 import {
   finishVideo,
+  getQuizResults,
   getVideoProgress,
+  getVideos,
   login,
   register,
+  requestPasswordReset,
+  resetPassword,
+  saveQuizResult as saveQuizResultApi,
   startVideo,
   updateUser,
   uploadProfilePhoto,
@@ -49,22 +54,33 @@ export default function App() {
   const [registerLoading, setRegisterLoading] = useState(false);
   const [profileError, setProfileError] = useState('');
   const [profileLoading, setProfileLoading] = useState(false);
-  const [quizTopic, setQuizTopic] = useState('');
+  const [quizTopic, setQuizTopic] = useState(null);
   const [selectedVideo, setSelectedVideo] = useState(null);
+  const [videos, setVideos] = useState([]);
   const [videoProgress, setVideoProgress] = useState({ watchedCount: 0, totalVideos: 0, videos: [] });
-  const [quizResults, setQuizResults] = useState({
-    'Como criar um currículo acertivo': { score: 7, total: 10 },
-    'Como se conectar com as pessoas certas': { score: 9, total: 10 },
-    'Perfil Profissional': { score: 4, total: 10 },
-  });
+  const [quizResults, setQuizResults] = useState({});
 
-  const startQuiz = (topic) => {
-    setQuizTopic(topic);
+  const startQuiz = (video) => {
+    setQuizTopic(video);
     setScreen('quizQuestion');
   };
 
-  const saveQuizResult = (score, total) => {
-    setQuizResults((prev) => ({ ...prev, [quizTopic]: { score, total } }));
+  const saveQuizResult = async (score, total) => {
+    if (!currentUser?.id || !quizTopic?.id) {
+      setScreen('quiz');
+      return;
+    }
+
+    try {
+      const result = await saveQuizResultApi(currentUser.id, quizTopic.id, { score, total });
+      setQuizResults((prev) => ({
+        ...prev,
+        [quizTopic.id]: { score: result.score, total: result.total, answered_at: result.answered_at },
+      }));
+    } catch (error) {
+      console.warn('Erro ao salvar resultado do quiz:', error.message);
+    }
+
     setScreen('quiz');
   };
 
@@ -79,12 +95,59 @@ export default function App() {
     }
   };
 
-  useEffect(() => {
-    if (currentUser?.id) {
-      loadVideoProgress(currentUser.id);
-    } else {
-      setVideoProgress({ watchedCount: 0, totalVideos: 0, videos: [] });
+  const loadVideos = async () => {
+    try {
+      const nextVideos = await getVideos();
+      setVideos(Array.isArray(nextVideos) ? nextVideos : []);
+    } catch (error) {
+      console.warn('Erro ao carregar videos:', error.message);
     }
+  };
+
+  const loadQuizResults = async (userId = currentUser?.id) => {
+    if (!userId) return;
+
+    try {
+      const results = await getQuizResults(userId);
+      const nextResults = {};
+      for (const result of results || []) {
+        nextResults[result.video_id] = {
+          score: result.score,
+          total: result.total,
+          answered_at: result.answered_at,
+        };
+      }
+      setQuizResults(nextResults);
+    } catch (error) {
+      console.warn('Erro ao carregar resultados dos quizzes:', error.message);
+    }
+  };
+
+  useEffect(() => {
+    let active = true;
+
+    const loadUserData = async () => {
+      await loadVideos();
+
+      if (!active) return;
+
+      await Promise.all([
+        loadVideoProgress(currentUser.id),
+        loadQuizResults(currentUser.id),
+      ]);
+    };
+
+    if (currentUser?.id) {
+      loadUserData();
+    } else {
+      setVideos([]);
+      setVideoProgress({ watchedCount: 0, totalVideos: 0, videos: [] });
+      setQuizResults({});
+    }
+
+    return () => {
+      active = false;
+    };
   }, [currentUser?.id]);
 
   const playVideo = async (video) => {
@@ -202,6 +265,8 @@ export default function App() {
       )}
       {screen === 'forgot' && (
         <ForgotPasswordScreen
+          onRequestCode={requestPasswordReset}
+          onResetPassword={resetPassword}
           onFinish={() => setScreen('login')}
           onBack={() => setScreen('login')}
         />
@@ -217,6 +282,7 @@ export default function App() {
       {screen === 'home' && (
         <HomeScreen
           username={currentUser?.name || '(usuário)'}
+          videos={videos}
           onLogout={handleLogout}
           onNavigate={setScreen}
           onPlayVideo={playVideo}
@@ -225,6 +291,9 @@ export default function App() {
       {screen === 'videoPlayer' && (
         <VideoPlayerScreen
           title={selectedVideo?.title}
+          progressPercent={
+            videoProgress.videos?.find((video) => video.id === selectedVideo?.id)?.watched ? 100 : 0
+          }
           onLogout={() => setScreen('login')}
           onNavigate={setScreen}
           onHome={() => setScreen('home')}
@@ -234,6 +303,7 @@ export default function App() {
       {screen === 'profile' && (
         <ProfileScreen
           currentUser={currentUser}
+          videoProgress={videoProgress}
           onUpdateProfile={handleUpdateProfile}
           onUploadProfilePhoto={handleUploadProfilePhoto}
           loading={profileLoading}
@@ -245,6 +315,8 @@ export default function App() {
       )}
       {screen === 'quiz' && (
         <QuizScreen
+          username={currentUser?.name || '(usuário)'}
+          videos={videos.length ? videos : videoProgress.videos}
           onLogout={() => setScreen('login')}
           onNavigate={setScreen}
           onHome={() => setScreen('home')}
@@ -254,7 +326,7 @@ export default function App() {
       )}
       {screen === 'quizQuestion' && (
         <QuizQuestionScreen
-          topic={quizTopic}
+          video={quizTopic}
           onFinish={saveQuizResult}
           onLogout={() => setScreen('login')}
           onNavigate={setScreen}
@@ -263,7 +335,7 @@ export default function App() {
       )}
       {screen === 'progress' && (
         <ProgressScreen
-          username={currentUser?.name || '(usuÃ¡rio)'}
+          username={currentUser?.name || '(usuário)'}
           videoProgress={videoProgress}
           onRefreshProgress={() => loadVideoProgress()}
           onLogout={() => setScreen('login')}

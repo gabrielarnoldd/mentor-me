@@ -10,7 +10,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { ArrowLeft, Eye, EyeOff, Lock, ShieldCheck, Unlock } from 'lucide-react-native';
+import { ArrowLeft, Eye, EyeOff, Lock, Mail, ShieldCheck, Unlock } from 'lucide-react-native';
 
 const COLORS = {
   white: '#FFFDFD',
@@ -20,12 +20,60 @@ const COLORS = {
   primary: '#02457C',
 };
 
-export default function ForgotPasswordScreen({ onFinish, onBack }) {
+export default function ForgotPasswordScreen({ onRequestCode, onResetPassword, onFinish, onBack }) {
+  const [step, setStep] = useState('request');
+  const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [info, setInfo] = useState('Informe seu e-mail para receber um código de verificação.');
+
+  const handleRequestCode = async () => {
+    if (!email) {
+      setError('Informe seu e-mail');
+      return;
+    }
+    setError('');
+    setLoading(true);
+    try {
+      const result = await onRequestCode?.(email);
+      setStep('reset');
+      if (result?.devCode) {
+        setInfo(`Seu código de verificação: ${result.devCode}`);
+      } else {
+        setInfo(result?.message || 'Um código de verificação foi enviado para o e-mail cadastrado.');
+      }
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFinish = async () => {
+    if (!code || !newPassword || !confirmPassword) {
+      setError('Preencha todos os campos');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError('As senhas não coincidem');
+      return;
+    }
+    setError('');
+    setLoading(true);
+    try {
+      await onResetPassword?.({ email, code, password: newPassword });
+      onFinish?.();
+    } catch (resetError) {
+      setError(resetError.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <KeyboardAvoidingView
@@ -46,61 +94,81 @@ export default function ForgotPasswordScreen({ onFinish, onBack }) {
         </View>
 
         <View style={styles.infoBanner}>
-          <Text style={styles.infoText}>
-            Um código de verificação foi enviado para o email cadastrado
-          </Text>
+          <Text style={styles.infoText}>{info}</Text>
         </View>
 
         <View style={styles.form}>
-          <Field
-            icon={<ShieldCheck size={22} color={COLORS.primary} />}
-            value={code}
-            onChangeText={setCode}
-            placeholder="Código de verificação"
-            keyboardType="number-pad"
-          />
+          {step === 'request' ? (
+            <Field
+              icon={<Mail size={22} color={COLORS.primary} />}
+              value={email}
+              onChangeText={setEmail}
+              placeholder="E-mail"
+              autoCapitalize="none"
+              keyboardType="email-address"
+            />
+          ) : (
+            <>
+              <Field
+                icon={<ShieldCheck size={22} color={COLORS.primary} />}
+                value={code}
+                onChangeText={setCode}
+                placeholder="Código de verificação"
+                keyboardType="number-pad"
+              />
 
-          <Field
-            icon={<Unlock size={22} color={COLORS.primary} />}
-            value={newPassword}
-            onChangeText={setNewPassword}
-            placeholder="Nova senha"
-            secureTextEntry={!showNew}
-            rightIcon={
-              showNew ? (
-                <Eye size={20} color={COLORS.primary} />
-              ) : (
-                <EyeOff size={20} color={COLORS.primary} />
-              )
-            }
-            onRightIconPress={() => setShowNew((v) => !v)}
-          />
+              <Field
+                icon={<Unlock size={22} color={COLORS.primary} />}
+                value={newPassword}
+                onChangeText={setNewPassword}
+                placeholder="Nova senha"
+                secureTextEntry={!showNew}
+                rightIcon={
+                  showNew ? (
+                    <Eye size={20} color={COLORS.primary} />
+                  ) : (
+                    <EyeOff size={20} color={COLORS.primary} />
+                  )
+                }
+                onRightIconPress={() => setShowNew((v) => !v)}
+              />
 
-          <Field
-            icon={<Lock size={22} color={COLORS.primary} />}
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            placeholder="Confirmar senha"
-            secureTextEntry={!showConfirm}
-            rightIcon={
-              showConfirm ? (
-                <Eye size={20} color={COLORS.primary} />
-              ) : (
-                <EyeOff size={20} color={COLORS.primary} />
-              )
-            }
-            onRightIconPress={() => setShowConfirm((v) => !v)}
-          />
+              <Field
+                icon={<Lock size={22} color={COLORS.primary} />}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                placeholder="Confirmar senha"
+                secureTextEntry={!showConfirm}
+                rightIcon={
+                  showConfirm ? (
+                    <Eye size={20} color={COLORS.primary} />
+                  ) : (
+                    <EyeOff size={20} color={COLORS.primary} />
+                  )
+                }
+                onRightIconPress={() => setShowConfirm((v) => !v)}
+              />
+            </>
+          )}
         </View>
+
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
         <Pressable
           style={({ pressed }) => [
             styles.finishButton,
             pressed && styles.finishButtonPressed,
           ]}
-          onPress={onFinish}
+          onPress={step === 'request' ? handleRequestCode : handleFinish}
+          disabled={loading}
         >
-          <Text style={styles.finishButtonText}>Finalizar</Text>
+          <Text style={styles.finishButtonText}>
+            {loading
+              ? 'Aguarde...'
+              : step === 'request'
+                ? 'Enviar código'
+                : 'Finalizar'}
+          </Text>
         </Pressable>
 
         <View style={styles.logoWrapper}>
@@ -225,6 +293,13 @@ const styles = StyleSheet.create({
     fontFamily: 'NATS_400Regular',
     fontSize: 30,
     color: COLORS.background,
+  },
+  errorText: {
+    fontFamily: 'Montserrat_600SemiBold',
+    fontSize: 14,
+    color: '#DC2626',
+    marginBottom: 16,
+    textAlign: 'center',
   },
   logoWrapper: {
     alignItems: 'center',

@@ -1,5 +1,6 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Animated,
   Image,
   Pressable,
@@ -10,6 +11,7 @@ import {
 import Svg, { Path } from 'react-native-svg';
 import { Menu, RotateCcw, ArrowLeft } from 'lucide-react-native';
 import MenuDrawer from '../components/MenuDrawer';
+import { getQuizQuestions } from '../api';
 
 const COLORS = {
   white: '#FFFDFD',
@@ -22,23 +24,10 @@ const COLORS = {
   wrong: '#EF4444',
 };
 
-const QUESTIONS = [
-  { text: 'Devo colocar uma foto\nminha no meu currículo?', answer: 'no' },
-  { text: 'Devo incluir todas as\nminhas experiências?', answer: 'yes' },
-  { text: 'O currículo deve passar\nde uma página?', answer: 'no' },
-  { text: 'Devo listar hobbies no\ncurrículo?', answer: 'no' },
-  { text: 'Vale a pena incluir\nidiomas em qualquer nível?', answer: 'no' },
-  { text: 'Devo personalizar o\ncurrículo para cada vaga?', answer: 'yes' },
-  { text: 'É importante incluir\nreferências profissionais?', answer: 'no' },
-  { text: 'Devo mencionar pretensão\nsalarial no currículo?', answer: 'no' },
-  { text: 'Preciso atualizar o\ncurrículo regularmente?', answer: 'yes' },
-  { text: 'Vale a pena pedir\nfeedback sobre o currículo?', answer: 'yes' },
-];
-
 const FEEDBACK_MS = 900;
 
 export default function QuizQuestionScreen({
-  topic = 'Quiz',
+  video,
   onFinish,
   onLogout,
   onNavigate,
@@ -51,18 +40,63 @@ export default function QuizQuestionScreen({
   const [showResults, setShowResults] = useState(false);
   const [finalScore, setFinalScore] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [questions, setQuestions] = useState([]);
+  const [loadingQuestions, setLoadingQuestions] = useState(false);
+  const [questionsError, setQuestionsError] = useState('');
 
   const scaleYes = useRef(new Animated.Value(1)).current;
   const scaleNo = useRef(new Animated.Value(1)).current;
   const resultsOpacity = useRef(new Animated.Value(0)).current;
   const resultsScale = useRef(new Animated.Value(0.85)).current;
 
-  const current = QUESTIONS[index];
+  const current = questions[index];
+
+  useEffect(() => {
+    let active = true;
+
+    const loadQuestions = async () => {
+      if (!video?.id) return;
+
+      setLoadingQuestions(true);
+      setQuestionsError('');
+      setIndex(0);
+      setScore(0);
+      setAnswered(0);
+      setSelected(null);
+      setShowResults(false);
+      resultsOpacity.setValue(0);
+      resultsScale.setValue(0.85);
+
+      try {
+        const nextQuestions = await getQuizQuestions(video.id);
+        if (active) {
+          setQuestions(Array.isArray(nextQuestions) ? nextQuestions : []);
+        }
+      } catch (error) {
+        if (active) {
+          setQuestions([]);
+          setQuestionsError(error.message);
+        }
+      } finally {
+        if (active) {
+          setLoadingQuestions(false);
+        }
+      }
+    };
+
+    loadQuestions();
+
+    return () => {
+      active = false;
+    };
+  }, [video?.id]);
 
   const handleAnswer = (choice) => {
     if (selected) return;
     setSelected(choice);
     setAnswered(index + 1);
+
+    if (!current) return;
 
     const isCorrect = choice === current.answer;
     const newScore = isCorrect ? score + 1 : score;
@@ -77,7 +111,7 @@ export default function QuizQuestionScreen({
     setTimeout(() => {
       setSelected(null);
 
-      if (index + 1 >= QUESTIONS.length) {
+      if (index + 1 >= questions.length) {
         setFinalScore(newScore);
         setIndex(0);
         setScore(0);
@@ -106,11 +140,12 @@ export default function QuizQuestionScreen({
   const handleBack = () => {
     Animated.timing(resultsOpacity, { toValue: 0, duration: 200, useNativeDriver: true }).start(() => {
       setShowResults(false);
-      onFinish?.(finalScore, QUESTIONS.length);
+      onFinish?.(finalScore, questions.length);
     });
   };
 
-  const scoreColor = finalScore / QUESTIONS.length >= 0.6 ? COLORS.correct : COLORS.wrong;
+  const totalQuestions = questions.length || 1;
+  const scoreColor = finalScore / totalQuestions >= 0.6 ? COLORS.correct : COLORS.wrong;
 
   return (
     <View style={styles.flex}>
@@ -132,34 +167,44 @@ export default function QuizQuestionScreen({
       </View>
 
       <View style={styles.topicPill}>
-        <Text style={styles.topicText}>{topic}</Text>
+        <Text style={styles.topicText}>{video?.title || 'Quiz'}</Text>
       </View>
 
       <View style={styles.body}>
-        <Text style={styles.question}>{current.text}</Text>
+        {loadingQuestions ? (
+          <ActivityIndicator size="large" color={COLORS.primary} />
+        ) : questionsError ? (
+          <Text style={styles.question}>{questionsError}</Text>
+        ) : current ? (
+          <>
+            <Text style={styles.question}>{current.text}</Text>
 
-        <View style={styles.cardsContainer}>
-          <AnswerCard
-            label="SIM"
-            variant="yes"
-            correct={current.answer === 'yes'}
-            selected={selected}
-            scale={scaleYes}
-            onPress={() => handleAnswer('yes')}
-          />
-          <AnswerCard
-            label="Não"
-            variant="no"
-            correct={current.answer === 'no'}
-            selected={selected}
-            scale={scaleNo}
-            onPress={() => handleAnswer('no')}
-          />
-        </View>
+            <View style={styles.cardsContainer}>
+              <AnswerCard
+                label="SIM"
+                variant="yes"
+                correct={current.answer === 'yes'}
+                selected={selected}
+                scale={scaleYes}
+                onPress={() => handleAnswer('yes')}
+              />
+              <AnswerCard
+                label="Não"
+                variant="no"
+                correct={current.answer === 'no'}
+                selected={selected}
+                scale={scaleNo}
+                onPress={() => handleAnswer('no')}
+              />
+            </View>
 
-        <Text style={styles.progress}>
-          {answered}/{QUESTIONS.length}
-        </Text>
+            <Text style={styles.progress}>
+              {answered}/{questions.length}
+            </Text>
+          </>
+        ) : (
+          <Text style={styles.question}>Nenhuma pergunta disponível</Text>
+        )}
       </View>
 
       {showResults && (
@@ -168,7 +213,7 @@ export default function QuizQuestionScreen({
             <Text style={styles.resultTitle}>Resultado</Text>
 
             <Text style={[styles.scoreBig, { color: scoreColor }]}>
-              {finalScore}<Text style={styles.scoreBigTotal}>/{QUESTIONS.length}</Text>
+              {finalScore}<Text style={styles.scoreBigTotal}>/{questions.length}</Text>
             </Text>
             <Text style={styles.scoreLabel}>acertos</Text>
 
