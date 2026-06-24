@@ -30,14 +30,9 @@ const COLORS = {
   cardImage: '#BFC3C8',
 };
 
-const HISTORY = [
-  { id: '1', title: 'Entrevistas' },
-  { id: '2', title: 'Portifólios' },
-  { id: '3', title: 'Perfil\nProfissional' },
-];
-
 export default function ProfileScreen({
   currentUser,
+  videoProgress = { videos: [] },
   onUpdateProfile,
   onUploadProfilePhoto,
   loading,
@@ -66,6 +61,7 @@ export default function ProfileScreen({
       ? currentUser.profile_photo_url
       : `${API_BASE_URL}${currentUser.profile_photo_url}`
     : '';
+  const watchedVideos = videoProgress.videos?.filter((video) => video.watched) || [];
 
   const pickProfilePhoto = async () => {
     try {
@@ -174,11 +170,15 @@ export default function ProfileScreen({
 
         <Text style={styles.sectionTitle}>Você já assistiu:</Text>
 
-        <View style={styles.historyRow}>
-          {HISTORY.map((item) => (
-            <HistoryCard key={item.id} title={item.title} />
-          ))}
-        </View>
+        {watchedVideos.length ? (
+          <View style={styles.historyRow}>
+            {watchedVideos.map((video) => (
+              <HistoryCard key={video.id} title={video.title} />
+            ))}
+          </View>
+        ) : (
+          <Text style={styles.emptyText}>Nenhum vídeo assistido ainda</Text>
+        )}
       </ScrollView>
 
       <Pressable
@@ -355,33 +355,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     justifyContent: 'center',
   },
-  saveButton: {
-    marginTop: 16,
-    backgroundColor: COLORS.primary,
-    borderRadius: 14,
-    height: 52,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  saveButtonText: {
-    fontFamily: 'Montserrat_700Bold',
-    fontSize: 16,
-    color: COLORS.white,
-  },
-  successText: {
-    fontFamily: 'Montserrat_600SemiBold',
-    fontSize: 14,
-    color: '#16A34A',
-    marginTop: 10,
-    textAlign: 'center',
-  },
-  errorText: {
-    fontFamily: 'Montserrat_600SemiBold',
-    fontSize: 14,
-    color: '#DC2626',
-    marginTop: 10,
-    textAlign: 'center',
-  },
   input: {
     fontFamily: 'Montserrat_700Bold',
     fontSize: 15,
@@ -401,10 +374,12 @@ const styles = StyleSheet.create({
   historyRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
     gap: 10,
   },
   historyCard: {
-    flex: 1,
+    flexBasis: '31%',
+    flexGrow: 1,
     height: 110,
     borderRadius: 14,
     backgroundColor: COLORS.cardImage,
@@ -428,9 +403,15 @@ const styles = StyleSheet.create({
   },
   historyTitle: {
     fontFamily: 'Montserrat_700Bold',
-    fontSize: 13,
+    fontSize: 12,
     color: COLORS.primary,
     lineHeight: 16,
+  },
+  emptyText: {
+    fontFamily: 'Montserrat_600SemiBold',
+    fontSize: 14,
+    color: COLORS.primary,
+    textAlign: 'center',
   },
   logoutFloat: {
     position: 'absolute',

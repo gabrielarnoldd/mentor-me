@@ -1,4 +1,28 @@
-export const API_BASE_URL = 'http://localhost:4000';
+import { Platform } from 'react-native';
+import Constants from 'expo-constants';
+
+const API_PORT = 4000;
+
+function resolveBaseUrl() {
+  if (Platform.OS === 'web') {
+    if (typeof window !== 'undefined' && window.location?.hostname) {
+      return `http://${window.location.hostname}:${API_PORT}`;
+    }
+    return `http://localhost:${API_PORT}`;
+  }
+
+  // Em dispositivo/emulador usamos o mesmo host onde o Metro esta rodando
+  // (ex.: "192.168.0.10:8081"), trocando a porta pela do backend.
+  const hostUri = Constants.expoConfig?.hostUri || Constants.expoGoConfig?.debuggerHost || '';
+  const host = hostUri.split(':')[0];
+  if (host) {
+    return `http://${host}:${API_PORT}`;
+  }
+
+  return `http://localhost:${API_PORT}`;
+}
+
+export const API_BASE_URL = resolveBaseUrl();
 
 async function fetchJson(path, options = {}) {
   const { headers, ...fetchOptions } = options;
@@ -66,8 +90,26 @@ export async function uploadProfilePhoto(id, asset) {
   });
 }
 
+export async function requestPasswordReset(email) {
+  return fetchJson('/users/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function resetPassword({ email, code, password }) {
+  return fetchJson('/users/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ email, code, password }),
+  });
+}
+
 export async function getUser(id) {
   return fetchJson(`/users/${id}`);
+}
+
+export async function getVideos() {
+  return fetchJson('/videos');
 }
 
 export async function getVideoProgress(userId) {
@@ -83,5 +125,20 @@ export async function startVideo(userId, videoId) {
 export async function finishVideo(userId, videoId) {
   return fetchJson(`/videos/users/${userId}/${videoId}/finish`, {
     method: 'POST',
+  });
+}
+
+export async function getQuizQuestions(videoId) {
+  return fetchJson(`/quizzes/${videoId}/questions`);
+}
+
+export async function getQuizResults(userId) {
+  return fetchJson(`/quizzes/users/${userId}/results`);
+}
+
+export async function saveQuizResult(userId, videoId, { score, total }) {
+  return fetchJson(`/quizzes/users/${userId}/${videoId}/results`, {
+    method: 'POST',
+    body: JSON.stringify({ score, total }),
   });
 }

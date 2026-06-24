@@ -101,6 +101,8 @@ async function getUserVideoProgress(userId) {
        v.id,
        v.title,
        v.duration_seconds,
+       v.display_order,
+       v.created_at,
        COALESCE(uvp.watched, FALSE) AS watched,
        uvp.started_at,
        uvp.finished_at
@@ -125,7 +127,7 @@ router.get('/', async (req, res, next) => {
     await ensureVideoTables();
 
     const videos = await query(
-      'SELECT id, title, duration_seconds, display_order FROM videos ORDER BY display_order ASC, created_at ASC'
+      'SELECT id, title, duration_seconds, display_order, created_at FROM videos ORDER BY display_order ASC, created_at ASC'
     );
     res.json(videos);
   } catch (error) {

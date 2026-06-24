@@ -12,17 +12,35 @@ fs.mkdirSync(uploadDir, { recursive: true });
 
 let profilePhotoColumnReady;
 
+async function addColumnIfMissing(name, definition) {
+  try {
+    await query(`ALTER TABLE users ADD COLUMN ${name} ${definition}`);
+  } catch (error) {
+    if (error.code !== 'ER_DUP_FIELDNAME') {
+      throw error;
+    }
+  }
+}
+
 async function ensureProfilePhotoColumn() {
   if (!profilePhotoColumnReady) {
-    profilePhotoColumnReady = query('ALTER TABLE users ADD COLUMN profile_photo_url VARCHAR(500) NULL')
-      .catch((error) => {
-        if (error.code !== 'ER_DUP_FIELDNAME') {
-          throw error;
-        }
-      });
+    profilePhotoColumnReady = addColumnIfMissing('profile_photo_url', 'VARCHAR(500) NULL');
   }
 
   return profilePhotoColumnReady;
+}
+
+let passwordResetColumnsReady;
+
+async function ensurePasswordResetColumns() {
+  if (!passwordResetColumnsReady) {
+    passwordResetColumnsReady = (async () => {
+      await addColumnIfMissing('reset_code', 'VARCHAR(10) NULL');
+      await addColumnIfMissing('reset_code_expires', 'DATETIME NULL');
+    })();
+  }
+
+  return passwordResetColumnsReady;
 }
 
 function userFields(includePassword = false) {
@@ -97,6 +115,81 @@ router.post('/login', async (req, res, next) => {
       profile_photo_url: user.profile_photo_url,
       created_at: user.created_at,
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/forgot-password', async (req, res, next) => {
+  try {
+    await ensurePasswordResetColumns();
+
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'E-mail e obrigatorio' });
+    }
+
+    const generic = { message: 'Se o e-mail estiver cadastrado, um codigo de verificacao foi gerado.' };
+
+    const users = await query('SELECT id FROM users WHERE email = ?', [email]);
+    const user = users[0];
+    if (!user) {
+      return res.json(generic);
+    }
+
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    const expires = new Date(Date.now() + 15 * 60 * 1000);
+
+    await query(
+      'UPDATE users SET reset_code = ?, reset_code_expires = ? WHERE id = ?',
+      [code, expires, user.id]
+    );
+
+    console.log(`[forgot-password] Codigo para ${email}: ${code}`);
+
+    const response = { ...generic };
+    // Sem servico de e-mail configurado: em desenvolvimento o codigo e retornado
+    // para que o fluxo possa ser concluido e testado pelo proprio app.
+    if (process.env.NODE_ENV !== 'production') {
+      response.devCode = code;
+    }
+
+    res.json(response);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/reset-password', async (req, res, next) => {
+  try {
+    await ensurePasswordResetColumns();
+
+    const { email, code, password } = req.body;
+    if (!email || !code || !password) {
+      return res.status(400).json({ error: 'E-mail, codigo e nova senha sao obrigatorios' });
+    }
+
+    const users = await query(
+      'SELECT id, reset_code, reset_code_expires FROM users WHERE email = ?',
+      [email]
+    );
+    const user = users[0];
+
+    if (!user || !user.reset_code || user.reset_code !== String(code)) {
+      return res.status(400).json({ error: 'Codigo invalido' });
+    }
+
+    if (!user.reset_code_expires || new Date(user.reset_code_expires) < new Date()) {
+      return res.status(400).json({ error: 'Codigo expirado, solicite um novo' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await query(
+      'UPDATE users SET password = ?, reset_code = NULL, reset_code_expires = NULL WHERE id = ?',
+      [hashedPassword, user.id]
+    );
+
+    res.json({ message: 'Senha redefinida com sucesso' });
   } catch (error) {
     next(error);
   }
