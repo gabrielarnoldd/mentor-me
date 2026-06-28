@@ -3,18 +3,42 @@ const { query } = require('../db');
 
 const router = express.Router();
 
-const DEFAULT_QUESTIONS = [
-  { text: 'Devo colocar uma foto minha no meu curriculo?', answer: 'no', display_order: 1 },
-  { text: 'Devo incluir todas as minhas experiencias?', answer: 'yes', display_order: 2 },
-  { text: 'O curriculo deve passar de uma pagina?', answer: 'no', display_order: 3 },
-  { text: 'Devo listar hobbies no curriculo?', answer: 'no', display_order: 4 },
-  { text: 'Vale a pena incluir idiomas em qualquer nivel?', answer: 'no', display_order: 5 },
-  { text: 'Devo personalizar o curriculo para cada vaga?', answer: 'yes', display_order: 6 },
-  { text: 'E importante incluir referencias profissionais?', answer: 'no', display_order: 7 },
-  { text: 'Devo mencionar pretensao salarial no curriculo?', answer: 'no', display_order: 8 },
-  { text: 'Preciso atualizar o curriculo regularmente?', answer: 'yes', display_order: 9 },
-  { text: 'Vale a pena pedir feedback sobre o curriculo?', answer: 'yes', display_order: 10 },
-];
+const QUESTIONS_BY_VIDEO = {
+  curriculo: [
+    { text: 'Devo colocar uma foto minha no meu curriculo?', answer: 'no', display_order: 1 },
+    { text: 'Devo incluir todas as minhas experiencias?', answer: 'yes', display_order: 2 },
+    { text: 'O curriculo deve passar de uma pagina?', answer: 'no', display_order: 3 },
+    { text: 'Devo listar hobbies no curriculo?', answer: 'no', display_order: 4 },
+    { text: 'Vale a pena incluir idiomas em qualquer nivel?', answer: 'no', display_order: 5 },
+    { text: 'Devo personalizar o curriculo para cada vaga?', answer: 'yes', display_order: 6 },
+    { text: 'E importante incluir referencias profissionais?', answer: 'no', display_order: 7 },
+    { text: 'Devo mencionar pretensao salarial no curriculo?', answer: 'no', display_order: 8 },
+    { text: 'Preciso atualizar o curriculo regularmente?', answer: 'yes', display_order: 9 },
+    { text: 'Vale a pena pedir feedback sobre o curriculo?', answer: 'yes', display_order: 10 },
+  ],
+  conexoes: [
+    { text: 'Devo manter contato com a minha rede com regularidade?', answer: 'yes', display_order: 1 },
+    { text: 'Networking serve apenas quando estou procurando emprego?', answer: 'no', display_order: 2 },
+    { text: 'Vale a pena ajudar pessoas da rede sem esperar retorno imediato?', answer: 'yes', display_order: 3 },
+    { text: 'E util participar de eventos da minha area?', answer: 'yes', display_order: 4 },
+    { text: 'Conexoes de qualidade importam mais que a quantidade?', answer: 'yes', display_order: 5 },
+    { text: 'Devo me conectar apenas com pessoas do meu nivel hierarquico?', answer: 'no', display_order: 6 },
+    { text: 'Vale a pena manter um perfil profissional atualizado online?', answer: 'yes', display_order: 7 },
+    { text: 'Pedir indicacoes para a minha rede e algo inapropriado?', answer: 'no', display_order: 8 },
+  ],
+  'imagem-profissional': [
+    { text: 'A minha imagem profissional se constroi no dia a dia?', answer: 'yes', display_order: 1 },
+    { text: 'A primeira impressao pode impactar oportunidades?', answer: 'yes', display_order: 2 },
+    { text: 'A forma como me comunico faz parte da minha imagem?', answer: 'yes', display_order: 3 },
+    { text: 'Posso falar mal de antigos empregos publicamente?', answer: 'no', display_order: 4 },
+    { text: 'Cuidar da postura e da vestimenta e irrelevante?', answer: 'no', display_order: 5 },
+    { text: 'Ser pontual ajuda na minha imagem profissional?', answer: 'yes', display_order: 6 },
+    { text: 'As minhas redes sociais nao influenciam a imagem profissional?', answer: 'no', display_order: 7 },
+    { text: 'Cumprir compromissos fortalece a minha reputacao?', answer: 'yes', display_order: 8 },
+  ],
+};
+
+const GENERIC_QUESTIONS = QUESTIONS_BY_VIDEO.curriculo;
 
 let quizTablesReady;
 
@@ -68,10 +92,23 @@ async function ensureQuizTables() {
 
       const videos = await query('SELECT id FROM videos ORDER BY display_order ASC, created_at ASC');
       for (const video of videos) {
-        const existing = await query('SELECT id FROM quiz_questions WHERE video_id = ? LIMIT 1', [video.id]);
-        if (existing.length) continue;
+        const questions = QUESTIONS_BY_VIDEO[video.id] || GENERIC_QUESTIONS;
 
-        for (const question of DEFAULT_QUESTIONS) {
+        const existing = await query(
+          'SELECT text FROM quiz_questions WHERE video_id = ? ORDER BY display_order ASC, id ASC',
+          [video.id]
+        );
+
+        // Re-seed quando ainda nao ha perguntas ou quando o conjunto salvo
+        // nao corresponde ao esperado (ex.: base antiga com perguntas genericas
+        // duplicadas em todos os videos).
+        const matches =
+          existing.length === questions.length &&
+          existing.every((row, i) => row.text === questions[i].text);
+        if (matches) continue;
+
+        await query('DELETE FROM quiz_questions WHERE video_id = ?', [video.id]);
+        for (const question of questions) {
           await query(
             `INSERT INTO quiz_questions (video_id, text, answer, display_order)
              VALUES (?, ?, ?, ?)`,

@@ -21,15 +21,18 @@ const COLORS = {
 
 export default function ProgressScreen({
   username = '(usuário)',
-  videoProgress = { watchedCount: 0, totalVideos: 0, videos: [] },
+  videos = [],
+  quizResults = {},
   onRefreshProgress,
   onLogout,
   onNavigate,
   onHome,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const watchedPercent = videoProgress.totalVideos
-    ? Math.round((videoProgress.watchedCount / videoProgress.totalVideos) * 100)
+  const totalQuizzes = videos.length;
+  const answeredCount = videos.filter((video) => quizResults[video.id]).length;
+  const answeredPercent = totalQuizzes
+    ? Math.round((answeredCount / totalQuizzes) * 100)
     : 0;
 
   return (
@@ -63,38 +66,43 @@ export default function ProgressScreen({
       >
         <View style={styles.videoSummary}>
           <Text style={styles.videoSummaryNumber}>
-            {videoProgress.watchedCount}/{videoProgress.totalVideos}
+            {answeredCount}/{totalQuizzes}
           </Text>
-          <Text style={styles.videoSummaryLabel}>videos assistidos</Text>
+          <Text style={styles.videoSummaryLabel}>quizzes respondidos</Text>
         </View>
 
         <Text style={styles.sectionTitle}>
-          Seu progresso nos vídeos
+          Seu progresso nos quizzes
         </Text>
 
         <View style={styles.ringWrapper}>
-          <ProgressRing percent={watchedPercent} size={320} stroke={26} />
+          <ProgressRing percent={answeredPercent} size={320} stroke={26} />
           <View pointerEvents="none" style={styles.ringCenter}>
-            <Text style={styles.ringPercent}>{watchedPercent}%</Text>
+            <Text style={styles.ringPercent}>{answeredPercent}%</Text>
             <Text style={styles.ringLabel}>Concluído</Text>
           </View>
         </View>
 
-        {videoProgress.videos?.length ? (
+        {videos.length ? (
           <View style={styles.videoList}>
-            {videoProgress.videos.map((video, index) => (
-              <View
-                key={video.id}
-                style={[styles.videoRow, index < videoProgress.videos.length - 1 && styles.skillRowDivider]}
-              >
-                <Text style={styles.videoRowTitle}>{video.title}</Text>
-                <Text style={styles.videoRowStatus}>{video.watched ? 'Assistido' : 'Nao assistido'}</Text>
-              </View>
-            ))}
+            {videos.map((video, index) => {
+              const result = quizResults[video.id];
+              return (
+                <View
+                  key={video.id}
+                  style={[styles.videoRow, index < videos.length - 1 && styles.skillRowDivider]}
+                >
+                  <Text style={styles.videoRowTitle}>{video.title}</Text>
+                  <Text style={styles.videoRowStatus}>
+                    {result ? `Respondido (${result.score}/${result.total})` : 'Nao respondido'}
+                  </Text>
+                </View>
+              );
+            })}
           </View>
         ) : null}
-        {!videoProgress.videos?.length && (
-          <Text style={styles.emptyText}>Nenhum vídeo encontrado</Text>
+        {!videos.length && (
+          <Text style={styles.emptyText}>Nenhum quiz encontrado</Text>
         )}
       </ScrollView>
 

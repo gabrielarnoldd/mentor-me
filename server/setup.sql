@@ -66,6 +66,35 @@ CREATE TABLE IF NOT EXISTS quiz_questions (
     ON DELETE CASCADE
 );
 
+-- Perguntas especificas de cada quiz
+INSERT INTO quiz_questions (video_id, text, answer, display_order) VALUES
+  ('curriculo', 'Devo colocar uma foto minha no meu curriculo?', 'no', 1),
+  ('curriculo', 'Devo incluir todas as minhas experiencias?', 'yes', 2),
+  ('curriculo', 'O curriculo deve passar de uma pagina?', 'no', 3),
+  ('curriculo', 'Devo listar hobbies no curriculo?', 'no', 4),
+  ('curriculo', 'Vale a pena incluir idiomas em qualquer nivel?', 'no', 5),
+  ('curriculo', 'Devo personalizar o curriculo para cada vaga?', 'yes', 6),
+  ('curriculo', 'E importante incluir referencias profissionais?', 'no', 7),
+  ('curriculo', 'Devo mencionar pretensao salarial no curriculo?', 'no', 8),
+  ('curriculo', 'Preciso atualizar o curriculo regularmente?', 'yes', 9),
+  ('curriculo', 'Vale a pena pedir feedback sobre o curriculo?', 'yes', 10),
+  ('conexoes', 'Devo manter contato com a minha rede com regularidade?', 'yes', 1),
+  ('conexoes', 'Networking serve apenas quando estou procurando emprego?', 'no', 2),
+  ('conexoes', 'Vale a pena ajudar pessoas da rede sem esperar retorno imediato?', 'yes', 3),
+  ('conexoes', 'E util participar de eventos da minha area?', 'yes', 4),
+  ('conexoes', 'Conexoes de qualidade importam mais que a quantidade?', 'yes', 5),
+  ('conexoes', 'Devo me conectar apenas com pessoas do meu nivel hierarquico?', 'no', 6),
+  ('conexoes', 'Vale a pena manter um perfil profissional atualizado online?', 'yes', 7),
+  ('conexoes', 'Pedir indicacoes para a minha rede e algo inapropriado?', 'no', 8),
+  ('imagem-profissional', 'A minha imagem profissional se constroi no dia a dia?', 'yes', 1),
+  ('imagem-profissional', 'A primeira impressao pode impactar oportunidades?', 'yes', 2),
+  ('imagem-profissional', 'A forma como me comunico faz parte da minha imagem?', 'yes', 3),
+  ('imagem-profissional', 'Posso falar mal de antigos empregos publicamente?', 'no', 4),
+  ('imagem-profissional', 'Cuidar da postura e da vestimenta e irrelevante?', 'no', 5),
+  ('imagem-profissional', 'Ser pontual ajuda na minha imagem profissional?', 'yes', 6),
+  ('imagem-profissional', 'As minhas redes sociais nao influenciam a imagem profissional?', 'no', 7),
+  ('imagem-profissional', 'Cumprir compromissos fortalece a minha reputacao?', 'yes', 8);
+
 CREATE TABLE IF NOT EXISTS user_quiz_results (
   user_id INT NOT NULL,
   video_id VARCHAR(80) NOT NULL,

@@ -28,11 +28,14 @@ const COLORS = {
   link: '#028BBF',
   primary: '#02457C',
   cardImage: '#BFC3C8',
+  correct: '#22C55E',
+  wrong: '#EF4444',
 };
 
 export default function ProfileScreen({
   currentUser,
-  videoProgress = { videos: [] },
+  videos = [],
+  quizResults = {},
   onUpdateProfile,
   onUploadProfilePhoto,
   loading,
@@ -54,14 +57,18 @@ export default function ProfileScreen({
       setPassword('');
       setSuccessMessage('');
     }
-  }, [currentUser]);
+    // Depende apenas do id para nao limpar a mensagem de sucesso quando o
+    // proprio usuario e atualizado apos salvar as alteracoes.
+  }, [currentUser?.id]);
 
   const profilePhotoUri = currentUser?.profile_photo_url
     ? currentUser.profile_photo_url.startsWith('http')
       ? currentUser.profile_photo_url
       : `${API_BASE_URL}${currentUser.profile_photo_url}`
     : '';
-  const watchedVideos = videoProgress.videos?.filter((video) => video.watched) || [];
+  const answeredQuizzes = videos
+    .filter((video) => quizResults[video.id])
+    .map((video) => ({ id: video.id, title: video.title, result: quizResults[video.id] }));
 
   const pickProfilePhoto = async () => {
     try {
@@ -168,16 +175,16 @@ export default function ProfileScreen({
           </Pressable>
         </View>
 
-        <Text style={styles.sectionTitle}>Você já assistiu:</Text>
+        <Text style={styles.sectionTitle}>Quizzes que você respondeu:</Text>
 
-        {watchedVideos.length ? (
+        {answeredQuizzes.length ? (
           <View style={styles.historyRow}>
-            {watchedVideos.map((video) => (
-              <HistoryCard key={video.id} title={video.title} />
+            {answeredQuizzes.map((quiz) => (
+              <HistoryCard key={quiz.id} title={quiz.title} result={quiz.result} />
             ))}
           </View>
         ) : (
-          <Text style={styles.emptyText}>Nenhum vídeo assistido ainda</Text>
+          <Text style={styles.emptyText}>Nenhum quiz respondido ainda</Text>
         )}
       </ScrollView>
 
@@ -219,9 +226,19 @@ function EditField({ ...inputProps }) {
   );
 }
 
-function HistoryCard({ title }) {
+function HistoryCard({ title, result }) {
+  const scoreColor =
+    result && result.score / result.total >= 0.6 ? COLORS.correct : COLORS.wrong;
+
   return (
     <View style={styles.historyCard}>
+      {result ? (
+        <View style={[styles.historyScoreBadge, { backgroundColor: scoreColor }]}>
+          <Text style={styles.historyScoreText}>
+            {result.score}/{result.total}
+          </Text>
+        </View>
+      ) : null}
       <View style={styles.historyCardBottom}>
         <Svg
           width="100%"
@@ -384,6 +401,20 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: COLORS.cardImage,
     overflow: 'hidden',
+  },
+  historyScoreBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    zIndex: 1,
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: 999,
+  },
+  historyScoreText: {
+    fontFamily: 'Montserrat_700Bold',
+    fontSize: 11,
+    color: COLORS.white,
   },
   historyCardBottom: {
     position: 'absolute',

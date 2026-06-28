@@ -41,6 +41,9 @@ export default function QuizScreen({
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmCard, setConfirmCard] = useState(null);
+  const [showAll, setShowAll] = useState(false);
+  const INITIAL_VISIBLE = 2;
+  const visibleVideos = showAll ? videos : videos.slice(0, INITIAL_VISIBLE);
   const modalOpacity = useRef(new Animated.Value(0)).current;
   const modalScale = useRef(new Animated.Value(0.9)).current;
 
@@ -101,9 +104,9 @@ export default function QuizScreen({
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.sectionTitle}>Você já respondeu:</Text>
+        <Text style={styles.sectionTitle}>Quiz</Text>
         <View style={styles.cardsContainer}>
-          {videos.map((video) => {
+          {visibleVideos.map((video) => {
             return (
               <Card
                 key={video.id}
@@ -119,13 +122,20 @@ export default function QuizScreen({
           )}
         </View>
 
-        <Pressable
-          style={({ pressed }) => [styles.seeMoreButton, pressed && { opacity: 0.85 }]}
-          onPress={() => onNavigate?.('progress')}
-        >
-          <Text style={styles.seeMoreText}>Mostrar Mais</Text>
-          <ChevronDown size={18} color={COLORS.primary} strokeWidth={2.5} />
-        </Pressable>
+        {videos.length > INITIAL_VISIBLE && (
+          <Pressable
+            style={({ pressed }) => [styles.seeMoreButton, pressed && { opacity: 0.85 }]}
+            onPress={() => setShowAll((prev) => !prev)}
+          >
+            <Text style={styles.seeMoreText}>{showAll ? 'Mostrar Menos' : 'Mostrar Mais'}</Text>
+            <ChevronDown
+              size={18}
+              color={COLORS.primary}
+              strokeWidth={2.5}
+              style={showAll && styles.seeMoreIconUp}
+            />
+          </Pressable>
+        )}
       </ScrollView>
 
       <Pressable style={styles.fab} onPress={onHome}>
@@ -374,6 +384,9 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat_700Bold',
     fontSize: 15,
     color: COLORS.primary,
+  },
+  seeMoreIconUp: {
+    transform: [{ rotate: '180deg' }],
   },
   emptyText: {
     fontFamily: 'Montserrat_600SemiBold',
