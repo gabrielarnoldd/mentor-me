@@ -241,6 +241,8 @@ export default function App() {
     setScreen('login');
   };
 
+  const quizVideos = videos.length ? videos : videoProgress.videos;
+
   const ready = paytoneLoaded && montserratLoaded && natsLoaded;
 
   if (!ready) {
@@ -303,7 +305,8 @@ export default function App() {
       {screen === 'profile' && (
         <ProfileScreen
           currentUser={currentUser}
-          videoProgress={videoProgress}
+          videos={quizVideos}
+          quizResults={quizResults}
           onUpdateProfile={handleUpdateProfile}
           onUploadProfilePhoto={handleUploadProfilePhoto}
           loading={profileLoading}
@@ -316,7 +319,7 @@ export default function App() {
       {screen === 'quiz' && (
         <QuizScreen
           username={currentUser?.name || '(usuário)'}
-          videos={videos.length ? videos : videoProgress.videos}
+          videos={quizVideos}
           onLogout={() => setScreen('login')}
           onNavigate={setScreen}
           onHome={() => setScreen('home')}
@@ -336,8 +339,9 @@ export default function App() {
       {screen === 'progress' && (
         <ProgressScreen
           username={currentUser?.name || '(usuário)'}
-          videoProgress={videoProgress}
-          onRefreshProgress={() => loadVideoProgress()}
+          videos={quizVideos}
+          quizResults={quizResults}
+          onRefreshProgress={() => loadQuizResults()}
           onLogout={() => setScreen('login')}
           onNavigate={setScreen}
           onHome={() => setScreen('home')}
