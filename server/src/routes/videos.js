@@ -6,7 +6,7 @@ const router = express.Router();
 const DEFAULT_VIDEOS = [
   {
     id: 'curriculo',
-    title: 'Como criar um curriculo acertivo',
+    title: 'Como criar um currículo assertivo',
     duration_seconds: 45,
     display_order: 1,
   },
@@ -79,7 +79,7 @@ async function ensureVideoTables() {
 function validateUserId(req, res, next) {
   const userId = parseInt(req.params.userId, 10);
   if (!userId) {
-    return res.status(400).json({ error: 'ID de usuario invalido' });
+    return res.status(400).json({ error: 'ID de usuário inválido' });
   }
 
   req.userId = userId;
@@ -88,7 +88,7 @@ function validateUserId(req, res, next) {
 
 function validateVideoId(req, res, next) {
   if (!req.params.videoId) {
-    return res.status(400).json({ error: 'ID de video invalido' });
+    return res.status(400).json({ error: 'ID de vídeo inválido' });
   }
 
   req.videoId = req.params.videoId;
@@ -152,7 +152,7 @@ router.post('/users/:userId/:videoId/start', validateUserId, validateVideoId, as
 
     const videos = await query('SELECT id FROM videos WHERE id = ?', [req.videoId]);
     if (videos.length === 0) {
-      return res.status(404).json({ error: 'Video nao encontrado' });
+      return res.status(404).json({ error: 'Vídeo não encontrado' });
     }
 
     await query(
@@ -176,7 +176,7 @@ router.post('/users/:userId/:videoId/finish', validateUserId, validateVideoId, a
 
     const videos = await query('SELECT id FROM videos WHERE id = ?', [req.videoId]);
     if (videos.length === 0) {
-      return res.status(404).json({ error: 'Video nao encontrado' });
+      return res.status(404).json({ error: 'Vídeo não encontrado' });
     }
 
     await query(

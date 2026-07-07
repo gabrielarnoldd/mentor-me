@@ -74,7 +74,7 @@ export default function ProfileScreen({
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
-        Alert.alert('Permissao necessaria', 'Permita acesso as fotos para escolher sua foto de perfil.');
+        Alert.alert('Permissão necessária', 'Permita acesso às fotos para escolher sua foto de perfil.');
         return;
       }
 

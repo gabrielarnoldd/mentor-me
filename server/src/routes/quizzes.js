@@ -5,36 +5,40 @@ const router = express.Router();
 
 const QUESTIONS_BY_VIDEO = {
   curriculo: [
-    { text: 'Devo colocar uma foto minha no meu curriculo?', answer: 'no', display_order: 1 },
-    { text: 'Devo incluir todas as minhas experiencias?', answer: 'yes', display_order: 2 },
-    { text: 'O curriculo deve passar de uma pagina?', answer: 'no', display_order: 3 },
-    { text: 'Devo listar hobbies no curriculo?', answer: 'no', display_order: 4 },
-    { text: 'Vale a pena incluir idiomas em qualquer nivel?', answer: 'no', display_order: 5 },
-    { text: 'Devo personalizar o curriculo para cada vaga?', answer: 'yes', display_order: 6 },
-    { text: 'E importante incluir referencias profissionais?', answer: 'no', display_order: 7 },
-    { text: 'Devo mencionar pretensao salarial no curriculo?', answer: 'no', display_order: 8 },
-    { text: 'Preciso atualizar o curriculo regularmente?', answer: 'yes', display_order: 9 },
-    { text: 'Vale a pena pedir feedback sobre o curriculo?', answer: 'yes', display_order: 10 },
+    { text: 'Devo colocar uma foto minha no meu currículo?', answer: 'no', display_order: 1 },
+    { text: 'Devo incluir todas as minhas experiências?', answer: 'yes', display_order: 2 },
+    { text: 'O currículo deve passar de uma página?', answer: 'no', display_order: 3 },
+    { text: 'Devo listar hobbies no currículo?', answer: 'no', display_order: 4 },
+    { text: 'Vale a pena incluir idiomas em qualquer nível?', answer: 'no', display_order: 5 },
+    { text: 'Devo personalizar o currículo para cada vaga?', answer: 'yes', display_order: 6 },
+    { text: 'É importante incluir referências profissionais?', answer: 'no', display_order: 7 },
+    { text: 'Devo mencionar pretensão salarial no currículo?', answer: 'no', display_order: 8 },
+    { text: 'Preciso atualizar o currículo regularmente?', answer: 'yes', display_order: 9 },
+    { text: 'Vale a pena pedir feedback sobre o currículo?', answer: 'yes', display_order: 10 },
   ],
   conexoes: [
     { text: 'Devo manter contato com a minha rede com regularidade?', answer: 'yes', display_order: 1 },
     { text: 'Networking serve apenas quando estou procurando emprego?', answer: 'no', display_order: 2 },
     { text: 'Vale a pena ajudar pessoas da rede sem esperar retorno imediato?', answer: 'yes', display_order: 3 },
-    { text: 'E util participar de eventos da minha area?', answer: 'yes', display_order: 4 },
-    { text: 'Conexoes de qualidade importam mais que a quantidade?', answer: 'yes', display_order: 5 },
-    { text: 'Devo me conectar apenas com pessoas do meu nivel hierarquico?', answer: 'no', display_order: 6 },
+    { text: 'É útil participar de eventos da minha área?', answer: 'yes', display_order: 4 },
+    { text: 'Conexões de qualidade importam mais que a quantidade?', answer: 'yes', display_order: 5 },
+    { text: 'Devo me conectar apenas com pessoas do meu nível hierárquico?', answer: 'no', display_order: 6 },
     { text: 'Vale a pena manter um perfil profissional atualizado online?', answer: 'yes', display_order: 7 },
-    { text: 'Pedir indicacoes para a minha rede e algo inapropriado?', answer: 'no', display_order: 8 },
+    { text: 'Pedir indicações para a minha rede é algo inapropriado?', answer: 'no', display_order: 8 },
+    { text: 'Manter uma boa relação com ex-colegas ajuda na carreira?', answer: 'yes', display_order: 9 },
+    { text: 'Devo procurar a minha rede apenas quando preciso de algo?', answer: 'no', display_order: 10 },
   ],
   'imagem-profissional': [
-    { text: 'A minha imagem profissional se constroi no dia a dia?', answer: 'yes', display_order: 1 },
-    { text: 'A primeira impressao pode impactar oportunidades?', answer: 'yes', display_order: 2 },
+    { text: 'A minha imagem profissional se constrói no dia a dia?', answer: 'yes', display_order: 1 },
+    { text: 'A primeira impressão pode impactar oportunidades?', answer: 'yes', display_order: 2 },
     { text: 'A forma como me comunico faz parte da minha imagem?', answer: 'yes', display_order: 3 },
     { text: 'Posso falar mal de antigos empregos publicamente?', answer: 'no', display_order: 4 },
-    { text: 'Cuidar da postura e da vestimenta e irrelevante?', answer: 'no', display_order: 5 },
+    { text: 'Vestir-se de forma adequada ao ambiente reforça a minha imagem profissional?', answer: 'yes', display_order: 5 },
     { text: 'Ser pontual ajuda na minha imagem profissional?', answer: 'yes', display_order: 6 },
-    { text: 'As minhas redes sociais nao influenciam a imagem profissional?', answer: 'no', display_order: 7 },
-    { text: 'Cumprir compromissos fortalece a minha reputacao?', answer: 'yes', display_order: 8 },
+    { text: 'As minhas redes sociais não influenciam a imagem profissional?', answer: 'no', display_order: 7 },
+    { text: 'Cumprir compromissos fortalece a minha reputação?', answer: 'yes', display_order: 8 },
+    { text: 'Tratar todos com respeito e cordialidade melhora a minha imagem?', answer: 'yes', display_order: 9 },
+    { text: 'A minha imagem profissional importa apenas em entrevistas?', answer: 'no', display_order: 10 },
   ],
 };
 
@@ -125,7 +129,7 @@ async function ensureQuizTables() {
 function validateUserId(req, res, next) {
   const userId = parseInt(req.params.userId, 10);
   if (!userId) {
-    return res.status(400).json({ error: 'ID de usuario invalido' });
+    return res.status(400).json({ error: 'ID de usuário inválido' });
   }
 
   req.userId = userId;
@@ -134,7 +138,7 @@ function validateUserId(req, res, next) {
 
 function validateVideoId(req, res, next) {
   if (!req.params.videoId) {
-    return res.status(400).json({ error: 'ID de video invalido' });
+    return res.status(400).json({ error: 'ID de vídeo inválido' });
   }
 
   req.videoId = req.params.videoId;
@@ -183,7 +187,7 @@ router.post('/users/:userId/:videoId/results', validateUserId, validateVideoId, 
     const score = parseInt(req.body.score, 10);
     const total = parseInt(req.body.total, 10);
     if (Number.isNaN(score) || Number.isNaN(total) || total <= 0 || score < 0 || score > total) {
-      return res.status(400).json({ error: 'Resultado de quiz invalido' });
+      return res.status(400).json({ error: 'Resultado de quiz inválido' });
     }
 
     await query(
