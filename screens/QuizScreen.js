@@ -163,6 +163,9 @@ export default function QuizScreen({
               <Text style={styles.modalScoreText}>
                 {confirmCard.result.score}/{confirmCard.result.total}
               </Text>
+              <Text style={styles.modalScorePercent}>
+                {Math.round((confirmCard.result.score / confirmCard.result.total) * 100)}% de acertos
+              </Text>
             </View>
 
             <Text style={styles.modalQuestion}>Deseja responder novamente?</Text>
@@ -460,15 +463,22 @@ const styles = StyleSheet.create({
   },
   modalScoreBadge: {
     alignSelf: 'center',
+    alignItems: 'center',
     paddingVertical: 10,
     paddingHorizontal: 22,
-    borderRadius: 999,
+    borderRadius: 22,
     marginBottom: 18,
   },
   modalScoreText: {
     fontFamily: 'Montserrat_700Bold',
     fontSize: 20,
     color: COLORS.white,
+  },
+  modalScorePercent: {
+    fontFamily: 'Montserrat_600SemiBold',
+    fontSize: 13,
+    color: COLORS.white,
+    marginTop: 2,
   },
   modalQuestion: {
     fontFamily: 'Montserrat_700Bold',

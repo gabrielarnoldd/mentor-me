@@ -80,7 +80,7 @@ const uploadProfilePhoto = multer({
 function validateUserId(req, res, next) {
   const id = parseInt(req.params.id, 10);
   if (!id) {
-    return res.status(400).json({ error: 'ID de usuario invalido' });
+    return res.status(400).json({ error: 'ID de usuário inválido' });
   }
 
   req.userId = id;
@@ -93,19 +93,19 @@ router.post('/login', async (req, res, next) => {
 
     const { email, password } = req.body;
     if (!email || !password) {
-      return res.status(400).json({ error: 'E-mail e senha sao obrigatorios' });
+      return res.status(400).json({ error: 'E-mail e senha são obrigatórios' });
     }
 
     const users = await query(`SELECT ${userFields(true)} FROM users WHERE email = ?`, [email]);
     const user = users[0];
 
     if (!user) {
-      return res.status(401).json({ error: 'E-mail ou senha invalidos' });
+      return res.status(401).json({ error: 'E-mail ou senha inválidos' });
     }
 
     const passwordMatches = await bcrypt.compare(password, user.password);
     if (!passwordMatches) {
-      return res.status(401).json({ error: 'E-mail ou senha invalidos' });
+      return res.status(401).json({ error: 'E-mail ou senha inválidos' });
     }
 
     res.json({
@@ -126,10 +126,10 @@ router.post('/forgot-password', async (req, res, next) => {
 
     const { email } = req.body;
     if (!email) {
-      return res.status(400).json({ error: 'E-mail e obrigatorio' });
+      return res.status(400).json({ error: 'E-mail é obrigatório' });
     }
 
-    const generic = { message: 'Se o e-mail estiver cadastrado, um codigo de verificacao foi gerado.' };
+    const generic = { message: 'Se o e-mail estiver cadastrado, um código de verificação foi gerado.' };
 
     const users = await query('SELECT id FROM users WHERE email = ?', [email]);
     const user = users[0];
@@ -166,7 +166,7 @@ router.post('/reset-password', async (req, res, next) => {
 
     const { email, code, password } = req.body;
     if (!email || !code || !password) {
-      return res.status(400).json({ error: 'E-mail, codigo e nova senha sao obrigatorios' });
+      return res.status(400).json({ error: 'E-mail, código e nova senha são obrigatórios' });
     }
 
     const users = await query(
@@ -176,11 +176,11 @@ router.post('/reset-password', async (req, res, next) => {
     const user = users[0];
 
     if (!user || !user.reset_code || user.reset_code !== String(code)) {
-      return res.status(400).json({ error: 'Codigo invalido' });
+      return res.status(400).json({ error: 'Código inválido' });
     }
 
     if (!user.reset_code_expires || new Date(user.reset_code_expires) < new Date()) {
-      return res.status(400).json({ error: 'Codigo expirado, solicite um novo' });
+      return res.status(400).json({ error: 'Código expirado, solicite um novo' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -212,14 +212,14 @@ router.get('/:id', async (req, res, next) => {
 
     const id = parseInt(req.params.id, 10);
     if (!id) {
-      return res.status(400).json({ error: 'ID de usuario invalido' });
+      return res.status(400).json({ error: 'ID de usuário inválido' });
     }
 
     const users = await query(`SELECT ${userFields()} FROM users WHERE id = ?`, [id]);
     const user = users[0];
 
     if (!user) {
-      return res.status(404).json({ error: 'Usuario nao encontrado' });
+      return res.status(404).json({ error: 'Usuário não encontrado' });
     }
 
     res.json(user);
@@ -234,7 +234,7 @@ router.post('/', async (req, res, next) => {
 
     const { name, email, password } = req.body;
     if (!name || !email || !password) {
-      return res.status(400).json({ error: 'name, email e password sao obrigatorios' });
+      return res.status(400).json({ error: 'Nome, e-mail e senha são obrigatórios' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -256,7 +256,7 @@ router.put('/:id', async (req, res, next) => {
 
     const id = parseInt(req.params.id, 10);
     if (!id) {
-      return res.status(400).json({ error: 'ID de usuario invalido' });
+      return res.status(400).json({ error: 'ID de usuário inválido' });
     }
 
     const { name, email, password } = req.body;
@@ -278,7 +278,7 @@ router.put('/:id', async (req, res, next) => {
     }
 
     if (updates.length === 0) {
-      return res.status(400).json({ error: 'Pelo menos um campo deve ser enviado para atualizacao' });
+      return res.status(400).json({ error: 'Pelo menos um campo deve ser enviado para atualização' });
     }
 
     values.push(id);
@@ -289,7 +289,7 @@ router.put('/:id', async (req, res, next) => {
     );
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Usuario nao encontrado' });
+      return res.status(404).json({ error: 'Usuário não encontrado' });
     }
 
     const updatedUsers = await query(`SELECT ${userFields()} FROM users WHERE id = ?`, [id]);
@@ -312,7 +312,7 @@ router.post('/:id/profile-photo', validateUserId, uploadProfilePhoto.single('pro
 
     if (result.affectedRows === 0) {
       fs.unlink(req.file.path, () => {});
-      return res.status(404).json({ error: 'Usuario nao encontrado' });
+      return res.status(404).json({ error: 'Usuário não encontrado' });
     }
 
     const updatedUsers = await query(`SELECT ${userFields()} FROM users WHERE id = ?`, [req.userId]);
@@ -330,12 +330,12 @@ router.delete('/:id', async (req, res, next) => {
   try {
     const id = parseInt(req.params.id, 10);
     if (!id) {
-      return res.status(400).json({ error: 'ID de usuario invalido' });
+      return res.status(400).json({ error: 'ID de usuário inválido' });
     }
 
     const result = await query('DELETE FROM users WHERE id = ?', [id]);
     if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Usuario nao encontrado' });
+      return res.status(404).json({ error: 'Usuário não encontrado' });
     }
 
     res.status(204).send();
@@ -347,7 +347,7 @@ router.delete('/:id', async (req, res, next) => {
 router.use((error, req, res, next) => {
   if (error instanceof multer.MulterError) {
     if (error.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({ error: 'A foto deve ter no maximo 5MB' });
+      return res.status(400).json({ error: 'A foto deve ter no máximo 5MB' });
     }
 
     return res.status(400).json({ error: error.message });

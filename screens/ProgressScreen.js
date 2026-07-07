@@ -94,7 +94,7 @@ export default function ProgressScreen({
                 >
                   <Text style={styles.videoRowTitle}>{video.title}</Text>
                   <Text style={styles.videoRowStatus}>
-                    {result ? `Respondido (${result.score}/${result.total})` : 'Nao respondido'}
+                    {result ? `Respondido (${result.score}/${result.total})` : 'Não respondido'}
                   </Text>
                 </View>
               );

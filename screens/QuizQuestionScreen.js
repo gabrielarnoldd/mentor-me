@@ -145,6 +145,7 @@ export default function QuizQuestionScreen({
   };
 
   const totalQuestions = questions.length || 1;
+  const scorePercent = Math.round((finalScore / totalQuestions) * 100);
   const scoreColor = finalScore / totalQuestions >= 0.6 ? COLORS.correct : COLORS.wrong;
 
   return (
@@ -216,6 +217,10 @@ export default function QuizQuestionScreen({
               {finalScore}<Text style={styles.scoreBigTotal}>/{questions.length}</Text>
             </Text>
             <Text style={styles.scoreLabel}>acertos</Text>
+
+            <View style={[styles.scorePercentBadge, { backgroundColor: scoreColor }]}>
+              <Text style={styles.scorePercentText}>{scorePercent}% de acertos</Text>
+            </View>
 
             <View style={styles.resultButtons}>
               <Pressable
@@ -425,7 +430,18 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat_600SemiBold',
     fontSize: 15,
     color: COLORS.link,
+    marginBottom: 16,
+  },
+  scorePercentBadge: {
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 999,
     marginBottom: 28,
+  },
+  scorePercentText: {
+    fontFamily: 'Montserrat_700Bold',
+    fontSize: 16,
+    color: COLORS.white,
   },
   resultButtons: {
     gap: 12,
