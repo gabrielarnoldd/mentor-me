@@ -57,8 +57,6 @@ export default function ProfileScreen({
       setPassword('');
       setSuccessMessage('');
     }
-    // Depende apenas do id para nao limpar a mensagem de sucesso quando o
-    // proprio usuario e atualizado apos salvar as alteracoes.
   }, [currentUser?.id]);
 
   const profilePhotoUri = currentUser?.profile_photo_url

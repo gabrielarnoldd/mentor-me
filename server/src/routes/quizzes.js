@@ -103,9 +103,6 @@ async function ensureQuizTables() {
           [video.id]
         );
 
-        // Re-seed quando ainda nao ha perguntas ou quando o conjunto salvo
-        // nao corresponde ao esperado (ex.: base antiga com perguntas genericas
-        // duplicadas em todos os videos).
         const matches =
           existing.length === questions.length &&
           existing.every((row, i) => row.text === questions[i].text);
