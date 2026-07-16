@@ -31,8 +31,16 @@ export default function ProgressScreen({
   const [menuOpen, setMenuOpen] = useState(false);
   const totalQuizzes = videos.length;
   const answeredCount = videos.filter((video) => quizResults[video.id]).length;
-  const answeredPercent = totalQuizzes
-    ? Math.round((answeredCount / totalQuizzes) * 100)
+  const answeredResults = videos
+    .map((video) => quizResults[video.id])
+    .filter((result) => result && result.total > 0);
+  const averageScorePercent = answeredResults.length
+    ? Math.round(
+        answeredResults.reduce(
+          (sum, result) => sum + (result.score / result.total) * 100,
+          0
+        ) / answeredResults.length
+      )
     : 0;
 
   return (
@@ -76,10 +84,10 @@ export default function ProgressScreen({
         </Text>
 
         <View style={styles.ringWrapper}>
-          <ProgressRing percent={answeredPercent} size={320} stroke={26} />
+          <ProgressRing percent={averageScorePercent} size={320} stroke={26} />
           <View pointerEvents="none" style={styles.ringCenter}>
-            <Text style={styles.ringPercent}>{answeredPercent}%</Text>
-            <Text style={styles.ringLabel}>Concluído</Text>
+            <Text style={styles.ringPercent}>{averageScorePercent}%</Text>
+            <Text style={styles.ringLabel}>Média</Text>
           </View>
         </View>
 
