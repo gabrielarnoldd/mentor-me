@@ -55,6 +55,9 @@ export default function HomeScreen({
   onPlayVideo,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+  const INITIAL_VISIBLE = 2;
+  const visibleVideos = showAll ? videos : videos.slice(0, INITIAL_VISIBLE);
 
   return (
     <View style={styles.flex}>
@@ -81,7 +84,7 @@ export default function HomeScreen({
         <View style={styles.welcomePill}>
           <Text style={styles.welcomeText}>Bem-vindo, {username}</Text>
         </View>
-        {videos.map((video) => (
+        {visibleVideos.map((video) => (
           <Card
             key={video.id}
             title={video.title}
@@ -95,13 +98,20 @@ export default function HomeScreen({
           <Text style={styles.emptyText}>Nenhum vídeo disponível</Text>
         )}
 
-        <Pressable
-          style={({ pressed }) => [styles.seeMoreButton, pressed && { opacity: 0.85 }]}
-          onPress={() => onNavigate?.('quiz')}
-        >
-          <Text style={styles.seeMoreText}>Mostrar Mais</Text>
-          <ChevronDown size={18} color={COLORS.primary} strokeWidth={2.5} />
-        </Pressable>
+        {videos.length > INITIAL_VISIBLE && (
+          <Pressable
+            style={({ pressed }) => [styles.seeMoreButton, pressed && { opacity: 0.85 }]}
+            onPress={() => setShowAll((prev) => !prev)}
+          >
+            <Text style={styles.seeMoreText}>{showAll ? 'Mostrar Menos' : 'Mostrar Mais'}</Text>
+            <ChevronDown
+              size={18}
+              color={COLORS.primary}
+              strokeWidth={2.5}
+              style={showAll && styles.seeMoreIconUp}
+            />
+          </Pressable>
+        )}
       </ScrollView>
 
       <Pressable style={styles.fab} onPress={() => onNavigate?.('profile')}>
@@ -321,6 +331,9 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat_700Bold',
     fontSize: 15,
     color: COLORS.primary,
+  },
+  seeMoreIconUp: {
+    transform: [{ rotate: '180deg' }],
   },
   fab: {
     position: 'absolute',

@@ -18,7 +18,8 @@
     "react-native-web": "^0.21.2"
   },
   "scripts": {
-    "start": "expo start",
+    "start": "concurrently \"npm --prefix server run dev\" \"expo start --web --port 8082\"",
+    "expo": "expo start",
     "dev": "concurrently \"npm --prefix server run dev\" \"expo start --clear --port 8083\"",
     "android": "expo start --android",
     "ios": "expo start --ios",
