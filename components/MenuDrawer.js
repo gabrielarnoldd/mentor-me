@@ -32,41 +32,50 @@ export default function MenuDrawer({ visible, onClose, onNavigate, onLogout }) {
       <View style={styles.drawer}>
         <View style={styles.drawerHeader}>
           <Text style={styles.subtitle}>Sua carreira em foco</Text>
-          <Pressable
-            onPress={onClose}
-            hitSlop={12}
-            style={styles.closeButton}
-          >
-            <X size={18} color={COLORS.background} strokeWidth={2.5} />
+          <Pressable onPress={onClose} hitSlop={12} style={styles.closeButton}>
+            <X size={16} color={COLORS.background} strokeWidth={2} />
           </Pressable>
         </View>
 
         <View style={styles.menuList}>
-          {ITEMS.map(({ id, label, Icon, screen }) => (
-            <Pressable
-              key={id}
-              style={({ pressed }) => [
-                styles.menuItem,
-                pressed && styles.menuItemPressed,
-              ]}
-              onPress={() => {
-                onClose?.();
-                if (screen) onNavigate?.(screen);
-              }}
-            >
-              <Icon size={22} color={COLORS.primary} style={styles.menuIcon} />
-              <Text style={styles.menuLabel}>{label}</Text>
-            </Pressable>
+          {ITEMS.map(({ id, label, Icon, screen }, index) => (
+            <View key={id}>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.menuItem,
+                  pressed && styles.menuItemPressed,
+                ]}
+                onPress={() => {
+                  onClose?.();
+                  if (screen) onNavigate?.(screen);
+                }}
+              >
+                <View style={styles.iconWrap}>
+                  <Icon size={18} color={COLORS.primary} strokeWidth={2} />
+                </View>
+                <Text style={styles.menuLabel}>{label}</Text>
+              </Pressable>
+              {index < ITEMS.length - 1 && <View style={styles.divider} />}
+            </View>
           ))}
         </View>
 
-        <Pressable
-          style={styles.logoutButton}
-          onPress={onLogout}
-          hitSlop={12}
-        >
-          <LogOut size={28} color={COLORS.background} />
-        </Pressable>
+        <View style={styles.footer}>
+          <View style={styles.footerDivider} />
+          <Pressable
+            style={({ pressed }) => [
+              styles.logoutButton,
+              pressed && styles.menuItemPressed,
+            ]}
+            onPress={onLogout}
+            hitSlop={12}
+          >
+            <View style={styles.logoutIconWrap}>
+              <LogOut size={18} color={COLORS.primary} strokeWidth={2} />
+            </View>
+            <Text style={styles.logoutLabel}>Sair</Text>
+          </Pressable>
+        </View>
       </View>
     </View>
   );
@@ -84,64 +93,90 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.12)',
+    backgroundColor: 'rgba(2,69,124,0.25)',
   },
   drawer: {
-    width: '72%',
-    maxWidth: 340,
+    width: '76%',
+    maxWidth: 320,
     backgroundColor: COLORS.primary,
-    paddingTop: 28,
-    paddingBottom: 28,
-    paddingLeft: 16,
-    paddingRight: 18,
+    paddingTop: 32,
+    paddingHorizontal: 24,
+    justifyContent: 'space-between',
   },
   drawerHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 28,
-    paddingHorizontal: 4,
+    marginBottom: 36,
   },
   subtitle: {
     fontFamily: 'Montserrat_600SemiBold',
-    fontSize: 16,
+    fontSize: 14,
+    letterSpacing: 0.2,
     color: COLORS.background,
+    opacity: 0.85,
   },
   closeButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: COLORS.background,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
   menuList: {
-    gap: 14,
     flex: 1,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.inputBg,
-    borderRadius: 999,
-    paddingVertical: 12,
-    paddingLeft: 16,
-    paddingRight: 24,
+    paddingVertical: 16,
   },
   menuItemPressed: {
-    opacity: 0.8,
+    opacity: 0.6,
   },
-  menuIcon: {
-    marginRight: 12,
+  iconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLORS.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
   },
   menuLabel: {
-    fontFamily: 'Montserrat_700Bold',
-    fontSize: 18,
-    color: COLORS.primary,
+    fontFamily: 'Montserrat_600SemiBold',
+    fontSize: 16,
+    color: COLORS.white,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: 'rgba(255,253,253,0.12)',
+  },
+  footer: {
+    paddingBottom: 28,
+  },
+  footerDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255,253,253,0.12)',
+    marginBottom: 12,
   },
   logoutButton: {
-    alignSelf: 'flex-end',
-    padding: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  logoutIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLORS.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
+  logoutLabel: {
+    fontFamily: 'Montserrat_600SemiBold',
+    fontSize: 16,
+    color: COLORS.white,
   },
 });

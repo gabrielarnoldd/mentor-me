@@ -7,7 +7,7 @@ const DEFAULT_VIDEOS = [
   {
     id: 'curriculo',
     title: 'Como criar um currículo assertivo',
-    duration_seconds: 45,
+    duration_seconds: 30,
     display_order: 1,
   },
   {
@@ -19,7 +19,7 @@ const DEFAULT_VIDEOS = [
   {
     id: 'imagem-profissional',
     title: 'De bom dia a bom dia, a sua imagem se cria',
-    duration_seconds: 60,
+    duration_seconds: 30,
     display_order: 3,
   },
 ];

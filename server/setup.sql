@@ -45,9 +45,9 @@ CREATE TABLE IF NOT EXISTS user_video_progress (
 );
 
 INSERT INTO videos (id, title, duration_seconds, display_order) VALUES
-  ('curriculo', 'Como criar um currículo assertivo', 45, 1),
+  ('curriculo', 'Como criar um currículo assertivo', 30, 1),
   ('conexoes', 'Como se conectar com as pessoas certas', 30, 2),
-  ('imagem-profissional', 'De bom dia a bom dia, a sua imagem se cria', 60, 3)
+  ('imagem-profissional', 'De bom dia a bom dia, a sua imagem se cria', 30, 3)
 ON DUPLICATE KEY UPDATE
   title = VALUES(title),
   duration_seconds = VALUES(duration_seconds),
