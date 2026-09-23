@@ -29,6 +29,7 @@ const COLORS = {
 export default function VideoPlayerScreen({
   title = 'Vídeo',
   source,
+  isLastVideo = false,
   onLogout,
   onNavigate,
   onHome,
@@ -45,6 +46,9 @@ export default function VideoPlayerScreen({
   const progress = duration > 0 ? Math.max(0, Math.min(100, (currentTime / duration) * 100)) : 0;
 
   useEffect(() => {
+    setCurrentTime(0);
+    setDuration(0);
+
     const playingSubscription = player.addListener('playingChange', ({ isPlaying }) => {
       setPlaying(isPlaying);
     });
@@ -149,7 +153,9 @@ export default function VideoPlayerScreen({
         </View>
 
         <Pressable style={styles.nextVideo} hitSlop={8} onPress={finishVideo}>
-          <Text style={styles.nextVideoText}>Próximo vídeo </Text>
+          <Text style={styles.nextVideoText}>
+            {isLastVideo ? 'Concluir aula ' : 'Próximo vídeo '}
+          </Text>
           <ArrowRight size={18} color={COLORS.primary} strokeWidth={2.5} />
         </Pressable>
       </View>

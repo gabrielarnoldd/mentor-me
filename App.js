@@ -34,10 +34,12 @@ import {
   uploadProfilePhoto,
 } from './api';
 
-const VIDEO_SOURCES = {
-  curriculo: require('./assets/se conect 1.mp4'),
-  conexoes: require('./assets/se conect 2.mp4'),
-  'imagem-profissional': require('./assets/de bom dia em bom dia.mp4'),
+const VIDEO_PLAYLISTS = {
+  curriculo: [
+    { title: 'Parte 1', source: require('./assets/se conect 1.mp4') },
+    { title: 'Parte 2', source: require('./assets/se conect 2.mp4') },
+    { title: 'Parte 3 - Final', source: require('./assets/de bom dia em bom dia.mp4') },
+  ],
 };
 
 export default function App() {
@@ -62,6 +64,7 @@ export default function App() {
   const [profileLoading, setProfileLoading] = useState(false);
   const [quizTopic, setQuizTopic] = useState(null);
   const [selectedVideo, setSelectedVideo] = useState(null);
+  const [selectedVideoPart, setSelectedVideoPart] = useState(0);
   const [videos, setVideos] = useState([]);
   const [videoProgress, setVideoProgress] = useState({ watchedCount: 0, totalVideos: 0, videos: [] });
   const [quizResults, setQuizResults] = useState({});
@@ -158,6 +161,7 @@ export default function App() {
 
   const playVideo = async (video) => {
     setSelectedVideo(video);
+    setSelectedVideoPart(0);
     setScreen('videoPlayer');
 
     if (currentUser?.id && video?.id) {
@@ -171,6 +175,13 @@ export default function App() {
   };
 
   const finishCurrentVideo = async () => {
+    const playlist = VIDEO_PLAYLISTS[selectedVideo?.id] || [];
+
+    if (selectedVideoPart < playlist.length - 1) {
+      setSelectedVideoPart((currentPart) => currentPart + 1);
+      return;
+    }
+
     if (currentUser?.id && selectedVideo?.id) {
       try {
         const progress = await finishVideo(currentUser.id, selectedVideo.id);
@@ -248,6 +259,8 @@ export default function App() {
   };
 
   const quizVideos = videos.length ? videos : videoProgress.videos;
+  const selectedPlaylist = VIDEO_PLAYLISTS[selectedVideo?.id] || [];
+  const selectedPart = selectedPlaylist[selectedVideoPart];
 
   const ready = paytoneLoaded && montserratLoaded && natsLoaded;
 
@@ -298,8 +311,13 @@ export default function App() {
       )}
       {screen === 'videoPlayer' && (
         <VideoPlayerScreen
-          title={selectedVideo?.title}
-          source={VIDEO_SOURCES[selectedVideo?.id]}
+          title={
+            selectedPart
+              ? `${selectedVideo?.title} — ${selectedPart.title}`
+              : selectedVideo?.title
+          }
+          source={selectedPart?.source}
+          isLastVideo={selectedVideoPart >= selectedPlaylist.length - 1}
           onLogout={() => setScreen('login')}
           onNavigate={setScreen}
           onHome={() => setScreen('home')}
