@@ -84,16 +84,18 @@ export default function HomeScreen({
         <View style={styles.welcomePill}>
           <Text style={styles.welcomeText}>Bem-vindo, {username}</Text>
         </View>
-        {visibleVideos.map((video) => (
-          <Card
-            key={video.id}
-            title={video.title}
-            duration={formatDuration(video.duration_seconds)}
-            date={formatDate(video.created_at)}
-            image={VIDEO_IMAGES[video.id]}
-            onPress={() => onPlayVideo?.(video)}
-          />
-        ))}
+        <View style={styles.cardsContainer}>
+          {visibleVideos.map((video) => (
+            <Card
+              key={video.id}
+              title={video.title}
+              duration={formatDuration(video.duration_seconds)}
+              date={formatDate(video.created_at)}
+              image={VIDEO_IMAGES[video.id]}
+              onPress={() => onPlayVideo?.(video)}
+            />
+          ))}
+        </View>
         {!videos.length && (
           <Text style={styles.emptyText}>Nenhum vídeo disponível</Text>
         )}
@@ -222,13 +224,24 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   scrollContent: {
+    paddingHorizontal: 16,
     paddingBottom: 120,
     gap: 24,
     alignItems: 'center',
   },
+  cardsContainer: {
+    width: '100%',
+    maxWidth: 1120,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 24,
+  },
   card: {
     width: '100%',
     maxWidth: 340,
+    flexBasis: 300,
+    flexGrow: 1,
     height: 220,
     borderRadius: 24,
     backgroundColor: COLORS.cardImage,

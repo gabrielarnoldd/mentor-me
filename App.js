@@ -36,9 +36,16 @@ import {
 
 const VIDEO_PLAYLISTS = {
   curriculo: [
+    { title: 'Parte 1', source: require('./assets/parte 1.mov') },
+    { title: 'Parte 2', source: require('./assets/parte 2.mp4') },
+    { title: 'Parte 3 - Final', source: require('./assets/parte 3 - final.mp4') },
+  ],
+  conexoes: [
     { title: 'Parte 1', source: require('./assets/se conect 1.mp4') },
     { title: 'Parte 2', source: require('./assets/se conect 2.mp4') },
-    { title: 'Parte 3 - Final', source: require('./assets/de bom dia em bom dia.mp4') },
+  ],
+  'imagem-profissional': [
+    { source: require('./assets/de bom dia em bom dia.mp4') },
   ],
 };
 
@@ -312,7 +319,7 @@ export default function App() {
       {screen === 'videoPlayer' && (
         <VideoPlayerScreen
           title={
-            selectedPart
+            selectedPart?.title
               ? `${selectedVideo?.title} — ${selectedPart.title}`
               : selectedVideo?.title
           }

@@ -290,10 +290,10 @@ const styles = StyleSheet.create({
     marginTop: 18,
   },
   scrollContent: {
-    paddingHorizontal: 28,
+    paddingHorizontal: 16,
     paddingBottom: 120,
     alignSelf: 'center',
-    maxWidth: 480,
+    maxWidth: 1152,
     width: '100%',
   },
   sectionTitle: {
@@ -304,12 +304,18 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   cardsContainer: {
+    width: '100%',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
     gap: 24,
     alignItems: 'center',
   },
   card: {
     width: '100%',
     maxWidth: 340,
+    flexBasis: 300,
+    flexGrow: 1,
     height: 220,
     borderRadius: 24,
     backgroundColor: COLORS.cardImage,

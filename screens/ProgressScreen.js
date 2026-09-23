@@ -5,6 +5,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
@@ -29,6 +30,8 @@ export default function ProgressScreen({
   onHome,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { width } = useWindowDimensions();
+  const ringSize = Math.min(320, Math.max(220, width - 44));
   const totalQuizzes = videos.length;
   const answeredCount = videos.filter((video) => quizResults[video.id]).length;
   const answeredResults = videos
@@ -83,8 +86,12 @@ export default function ProgressScreen({
           Seu progresso nos quizzes
         </Text>
 
-        <View style={styles.ringWrapper}>
-          <ProgressRing percent={averageScorePercent} size={320} stroke={26} />
+        <View style={[styles.ringWrapper, { width: ringSize, height: ringSize }]}>
+          <ProgressRing
+            percent={averageScorePercent}
+            size={ringSize}
+            stroke={Math.max(18, Math.round(ringSize * 0.08))}
+          />
           <View pointerEvents="none" style={styles.ringCenter}>
             <Text style={styles.ringPercent}>{averageScorePercent}%</Text>
             <Text style={styles.ringLabel}>Média</Text>
@@ -230,9 +237,6 @@ const styles = StyleSheet.create({
     color: COLORS.link,
   },
   ringWrapper: {
-    width: '100%',
-    maxWidth: 320,
-    aspectRatio: 1,
     alignSelf: 'center',
     marginTop: 8,
     marginBottom: 36,

@@ -4,6 +4,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import {
@@ -39,9 +40,10 @@ export default function VideoPlayerScreen({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
+  const { width, height } = useWindowDimensions();
+  const videoWidth = Math.min(320, width - 32, Math.max(180, (height - 300) * (9 / 16)));
   const player = useVideoPlayer(source || null, (nextPlayer) => {
     nextPlayer.timeUpdateEventInterval = 0.25;
-    if (source) nextPlayer.play();
   });
   const progress = duration > 0 ? Math.max(0, Math.min(100, (currentTime / duration) * 100)) : 0;
 
@@ -56,10 +58,16 @@ export default function VideoPlayerScreen({
       setCurrentTime(nextTime);
       setDuration(player.duration || 0);
     });
+    const sourceSubscription = player.addListener('sourceLoad', ({ duration: sourceDuration }) => {
+      setDuration(sourceDuration || 0);
+      player.currentTime = Math.min(0.01, sourceDuration || 0);
+      player.pause();
+    });
 
     return () => {
       playingSubscription.remove();
       timeSubscription.remove();
+      sourceSubscription.remove();
     };
   }, [player]);
 
@@ -98,12 +106,12 @@ export default function VideoPlayerScreen({
       </View>
 
       <View style={styles.body}>
-        <View style={styles.videoArea}>
+        <View style={[styles.videoArea, { width: videoWidth }]}>
           {source ? (
             <VideoView
               player={player}
               style={styles.video}
-              contentFit="contain"
+              contentFit="cover"
               nativeControls={false}
               allowsFullscreen
             />
@@ -112,7 +120,7 @@ export default function VideoPlayerScreen({
           )}
         </View>
 
-        <View style={styles.progressBar}>
+        <View style={[styles.progressBar, { width: videoWidth }]}>
           <View style={[styles.progressFill, { width: `${progress}%` }]} />
           <View style={[styles.progressThumb, { left: `${progress}%` }]} />
         </View>
@@ -152,7 +160,11 @@ export default function VideoPlayerScreen({
           </Pressable>
         </View>
 
-        <Pressable style={styles.nextVideo} hitSlop={8} onPress={finishVideo}>
+        <Pressable
+          style={[styles.nextVideo, { width: videoWidth }]}
+          hitSlop={8}
+          onPress={finishVideo}
+        >
           <Text style={styles.nextVideoText}>
             {isLastVideo ? 'Concluir aula ' : 'Próximo vídeo '}
           </Text>
@@ -217,12 +229,14 @@ const styles = StyleSheet.create({
     maxWidth: 480,
     width: '100%',
     alignSelf: 'center',
+    alignItems: 'center',
   },
   videoArea: {
-    flex: 1,
     backgroundColor: COLORS.placeholder,
     borderRadius: 8,
-    minHeight: 280,
+    width: '100%',
+    maxWidth: 320,
+    aspectRatio: 9 / 16,
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
@@ -237,6 +251,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   progressBar: {
+    width: '100%',
+    maxWidth: 320,
     height: 4,
     backgroundColor: COLORS.primary,
     borderRadius: 2,
@@ -287,7 +303,9 @@ const styles = StyleSheet.create({
   nextVideo: {
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'flex-end',
+    width: '100%',
+    maxWidth: 320,
+    justifyContent: 'flex-end',
     marginTop: 12,
     paddingVertical: 4,
   },
