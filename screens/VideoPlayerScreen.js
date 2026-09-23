@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Image,
   Pressable,
@@ -14,6 +14,7 @@ import {
   RotateCcw,
   RotateCw,
 } from 'lucide-react-native';
+import { VideoView, useVideoPlayer } from 'expo-video';
 import MenuDrawer from '../components/MenuDrawer';
 
 const COLORS = {
@@ -27,15 +28,47 @@ const COLORS = {
 
 export default function VideoPlayerScreen({
   title = 'Vídeo',
-  progressPercent = 0,
+  source,
   onLogout,
   onNavigate,
   onHome,
   onFinish,
 }) {
-  const [playing, setPlaying] = useState(true);
+  const [playing, setPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
-  const progress = Math.max(0, Math.min(100, Number(progressPercent) || 0));
+  const player = useVideoPlayer(source || null, (nextPlayer) => {
+    nextPlayer.timeUpdateEventInterval = 0.25;
+    if (source) nextPlayer.play();
+  });
+  const progress = duration > 0 ? Math.max(0, Math.min(100, (currentTime / duration) * 100)) : 0;
+
+  useEffect(() => {
+    const playingSubscription = player.addListener('playingChange', ({ isPlaying }) => {
+      setPlaying(isPlaying);
+    });
+    const timeSubscription = player.addListener('timeUpdate', ({ currentTime: nextTime }) => {
+      setCurrentTime(nextTime);
+      setDuration(player.duration || 0);
+    });
+
+    return () => {
+      playingSubscription.remove();
+      timeSubscription.remove();
+    };
+  }, [player]);
+
+  const togglePlayback = () => {
+    if (!source) return;
+    if (playing) player.pause();
+    else player.play();
+  };
+
+  const finishVideo = () => {
+    player.pause();
+    onFinish?.();
+  };
 
   return (
     <View style={styles.flex}>
@@ -61,7 +94,19 @@ export default function VideoPlayerScreen({
       </View>
 
       <View style={styles.body}>
-        <View style={styles.videoArea} />
+        <View style={styles.videoArea}>
+          {source ? (
+            <VideoView
+              player={player}
+              style={styles.video}
+              contentFit="contain"
+              nativeControls={false}
+              allowsFullscreen
+            />
+          ) : (
+            <Text style={styles.unavailableText}>Vídeo ainda não disponível.</Text>
+          )}
+        </View>
 
         <View style={styles.progressBar}>
           <View style={[styles.progressFill, { width: `${progress}%` }]} />
@@ -69,7 +114,12 @@ export default function VideoPlayerScreen({
         </View>
 
         <View style={styles.controls}>
-          <Pressable hitSlop={8} style={styles.skipButton}>
+          <Pressable
+            hitSlop={8}
+            style={styles.skipButton}
+            onPress={() => player.seekBy(-10)}
+            disabled={!source}
+          >
             <RotateCcw size={44} color={COLORS.primary} strokeWidth={2.2} />
             <Text style={styles.skipNumber}>10</Text>
           </Pressable>
@@ -77,7 +127,8 @@ export default function VideoPlayerScreen({
           <Pressable
             hitSlop={8}
             style={styles.playButton}
-            onPress={() => setPlaying((p) => !p)}
+            onPress={togglePlayback}
+            disabled={!source}
           >
             {playing ? (
               <Pause size={36} color={COLORS.primary} strokeWidth={2.2} fill={COLORS.primary} />
@@ -86,13 +137,18 @@ export default function VideoPlayerScreen({
             )}
           </Pressable>
 
-          <Pressable hitSlop={8} style={styles.skipButton}>
+          <Pressable
+            hitSlop={8}
+            style={styles.skipButton}
+            onPress={() => player.seekBy(10)}
+            disabled={!source}
+          >
             <RotateCw size={44} color={COLORS.primary} strokeWidth={2.2} />
             <Text style={styles.skipNumber}>10</Text>
           </Pressable>
         </View>
 
-        <Pressable style={styles.nextVideo} hitSlop={8} onPress={onFinish || onHome}>
+        <Pressable style={styles.nextVideo} hitSlop={8} onPress={finishVideo}>
           <Text style={styles.nextVideoText}>Próximo vídeo </Text>
           <ArrowRight size={18} color={COLORS.primary} strokeWidth={2.5} />
         </Pressable>
@@ -161,6 +217,18 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.placeholder,
     borderRadius: 8,
     minHeight: 280,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  video: {
+    width: '100%',
+    height: '100%',
+  },
+  unavailableText: {
+    fontFamily: 'Montserrat_600SemiBold',
+    color: COLORS.primary,
+    fontSize: 16,
   },
   progressBar: {
     height: 4,

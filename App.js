@@ -34,6 +34,12 @@ import {
   uploadProfilePhoto,
 } from './api';
 
+const VIDEO_SOURCES = {
+  curriculo: require('./assets/se conect 1.mp4'),
+  conexoes: require('./assets/se conect 2.mp4'),
+  'imagem-profissional': require('./assets/de bom dia em bom dia.mp4'),
+};
+
 export default function App() {
   const [paytoneLoaded] = usePaytoneOne({ PaytoneOne_400Regular });
   const [montserratLoaded] = useMontserrat({
@@ -293,9 +299,7 @@ export default function App() {
       {screen === 'videoPlayer' && (
         <VideoPlayerScreen
           title={selectedVideo?.title}
-          progressPercent={
-            videoProgress.videos?.find((video) => video.id === selectedVideo?.id)?.watched ? 100 : 0
-          }
+          source={VIDEO_SOURCES[selectedVideo?.id]}
           onLogout={() => setScreen('login')}
           onNavigate={setScreen}
           onHome={() => setScreen('home')}
