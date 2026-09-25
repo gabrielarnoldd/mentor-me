@@ -18,7 +18,7 @@ const COLORS = {
 
 const ITEMS = [
   { id: 'perfil', label: 'Perfil', Icon: UserCircle, screen: 'profile' },
-  { id: 'quiz', label: 'Quiz', Icon: MessageCircleQuestion, screen: 'quiz' },
+  { id: 'quiz', label: 'Quizzes', Icon: MessageCircleQuestion, screen: 'quiz' },
   { id: 'progresso', label: 'Progresso', Icon: BarChart3, screen: 'progress' },
   { id: 'video', label: 'Vídeo-aulas', Icon: MonitorPlay, screen: 'home' },
 ];

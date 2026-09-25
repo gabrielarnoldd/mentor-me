@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
   Image,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -11,6 +10,7 @@ import {
 import Svg, { Path } from 'react-native-svg';
 import { ChevronDown, Menu, Play, Clock, Calendar } from 'lucide-react-native';
 import MenuDrawer from '../components/MenuDrawer';
+import useNativeLayout from '../components/useNativeLayout';
 
 const COLORS = {
   white: '#FFFDFD',
@@ -28,7 +28,7 @@ const VIDEO_IMAGES = {
 };
 
 function formatDuration(seconds = 0) {
-  const safeSeconds = Number(seconds) || 0;
+  const safeSeconds = Math.max(0, Math.round(Number(seconds) || 0));
   const minutes = Math.floor(safeSeconds / 60);
   const remainingSeconds = String(safeSeconds % 60).padStart(2, '0');
   return `${minutes}:${remainingSeconds}`;
@@ -36,10 +36,8 @@ function formatDuration(seconds = 0) {
 
 function formatDate(value) {
   if (!value) return '';
-
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '';
-
   return new Intl.DateTimeFormat('pt-BR', {
     day: '2-digit',
     month: 'short',
@@ -54,6 +52,7 @@ export default function HomeScreen({
   onNavigate,
   onPlayVideo,
 }) {
+  const nativeLayout = useNativeLayout();
   const [menuOpen, setMenuOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const INITIAL_VISIBLE = 2;
@@ -61,7 +60,7 @@ export default function HomeScreen({
 
   return (
     <View style={styles.flex}>
-      <View style={styles.header}>
+      <View style={[styles.header, nativeLayout.headerStyle]}>
         <Image
           source={require('../assets/logo-sistema.png')}
           style={styles.headerLogo}
@@ -76,7 +75,7 @@ export default function HomeScreen({
         </Pressable>
       </View>
 
-      <ScrollView
+      <ScrollView {...nativeLayout.scrollProps}
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -84,18 +83,18 @@ export default function HomeScreen({
         <View style={styles.welcomePill}>
           <Text style={styles.welcomeText}>Bem-vindo, {username}</Text>
         </View>
-        <View style={styles.cardsContainer}>
-          {visibleVideos.map((video) => (
-            <Card
-              key={video.id}
-              title={video.title}
-              duration={formatDuration(video.duration_seconds)}
-              date={formatDate(video.created_at)}
-              image={VIDEO_IMAGES[video.id]}
-              onPress={() => onPlayVideo?.(video)}
-            />
-          ))}
-        </View>
+        {visibleVideos.map((video) => (
+          <Card
+            nativeCardStyle={nativeLayout.homeCardStyle}
+            key={video.id}
+            title={video.title}
+            duration={formatDuration(video.duration_seconds)}
+            videoCount={video.video_count}
+            date={formatDate(video.created_at)}
+            image={VIDEO_IMAGES[video.id]}
+            onPress={() => onPlayVideo?.(video)}
+          />
+        ))}
         {!videos.length && (
           <Text style={styles.emptyText}>Nenhum vídeo disponível</Text>
         )}
@@ -116,10 +115,6 @@ export default function HomeScreen({
         )}
       </ScrollView>
 
-      <Pressable style={styles.fab} onPress={() => onNavigate?.('profile')}>
-        <ChevronDown size={26} color={COLORS.primary} />
-      </Pressable>
-
       <MenuDrawer
         visible={menuOpen}
         onClose={() => setMenuOpen(false)}
@@ -133,12 +128,13 @@ export default function HomeScreen({
   );
 }
 
-function Card({ title, duration, date, image, onPress }) {
+function Card({ nativeCardStyle, title, duration, videoCount, date, image, onPress }) {
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [
         styles.card,
+        nativeCardStyle,
         image && styles.cardWithImage,
         pressed && { opacity: 0.85 },
       ]}
@@ -157,29 +153,34 @@ function Card({ title, duration, date, image, onPress }) {
       </View>
 
       <View style={styles.cardBottom}>
-        <Svg
-          width="100%"
-          height={32}
-          viewBox="0 0 100 32"
-          preserveAspectRatio="none"
-          style={styles.cardWave}
+        <View pointerEvents="none" style={styles.cardWave}>
+          <Svg
+            width="100%"
+            height={32}
+            viewBox="0 0 100 32"
+            preserveAspectRatio="none"
         >
-          <Path
-            d="M0,32 L0,18 Q25,-2 50,16 T100,14 L100,32 Z"
-            fill={COLORS.inputBg}
-          />
-        </Svg>
+            <Path
+              d="M0,32 L0,18 Q25,-2 50,16 T100,14 L100,32 Z"
+              fill={COLORS.inputBg}
+            />
+          </Svg>
+        </View>
         <Text style={styles.cardTitle}>{title}</Text>
         <View style={styles.cardMeta}>
           <View style={styles.metaItem}>
-            <Clock size={13} color={COLORS.primary} strokeWidth={2.5} />
-            <Text style={styles.metaText}>{duration}</Text>
+            <Clock size={13} color={COLORS.primary} strokeWidth={2} />
+            <Text style={styles.metaText}>{duration} no total</Text>
           </View>
-          <View style={styles.metaItem}>
-            <Calendar size={13} color={COLORS.primary} strokeWidth={2.5} />
+          <Text style={styles.metaText}>·</Text>
+          <Text style={styles.metaText}>{videoCount} {videoCount === 1 ? 'vídeo' : 'vídeos'}</Text>
+        </View>
+        {date ? (
+          <View style={[styles.metaItem, styles.dateRow]}>
+            <Calendar size={13} color={COLORS.primary} strokeWidth={2} />
             <Text style={styles.metaText}>{date}</Text>
           </View>
-        </View>
+        ) : null}
       </View>
     </Pressable>
   );
@@ -224,24 +225,13 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   scrollContent: {
-    paddingHorizontal: 16,
     paddingBottom: 120,
     gap: 24,
     alignItems: 'center',
   },
-  cardsContainer: {
-    width: '100%',
-    maxWidth: 1120,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: 24,
-  },
   card: {
     width: '100%',
     maxWidth: 340,
-    flexBasis: 300,
-    flexGrow: 1,
     height: 220,
     borderRadius: 24,
     backgroundColor: COLORS.cardImage,
@@ -309,7 +299,10 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   cardMeta: {
-    gap: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
     marginTop: 8,
   },
   metaItem: {
@@ -321,6 +314,9 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat_600SemiBold',
     fontSize: 12,
     color: COLORS.primary,
+  },
+  dateRow: {
+    marginTop: 4,
   },
   emptyText: {
     fontFamily: 'Montserrat_600SemiBold',
@@ -347,26 +343,5 @@ const styles = StyleSheet.create({
   },
   seeMoreIconUp: {
     transform: [{ rotate: '180deg' }],
-  },
-  fab: {
-    position: 'absolute',
-    right: 20,
-    bottom: 20,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: COLORS.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 4,
-    ...Platform.select({
-      web: { boxShadow: '0 2px 6px rgba(0,0,0,0.15)' },
-      default: {
-        shadowColor: '#000',
-        shadowOpacity: 0.15,
-        shadowRadius: 6,
-        shadowOffset: { width: 0, height: 2 },
-      },
-    }),
   },
 });

@@ -19,6 +19,7 @@ import {
   User,
 } from 'lucide-react-native';
 import MenuDrawer from '../components/MenuDrawer';
+import useNativeLayout from '../components/useNativeLayout';
 import { API_BASE_URL } from '../api';
 
 const COLORS = {
@@ -44,6 +45,7 @@ export default function ProfileScreen({
   onNavigate,
   onHome,
 }) {
+  const nativeLayout = useNativeLayout();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -98,7 +100,7 @@ export default function ProfileScreen({
 
   return (
     <View style={styles.flex}>
-      <View style={styles.header}>
+      <View style={[styles.header, nativeLayout.headerStyle]}>
         <Pressable onPress={onHome} hitSlop={8}>
           <Image
             source={require('../assets/logo-sistema.png')}
@@ -115,7 +117,7 @@ export default function ProfileScreen({
         </Pressable>
       </View>
 
-      <ScrollView
+      <ScrollView {...nativeLayout.scrollProps}
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -189,7 +191,7 @@ export default function ProfileScreen({
       </ScrollView>
 
       <Pressable
-        style={styles.logoutFloat}
+        style={[styles.logoutFloat, { marginBottom: 20 + nativeLayout.bottomInset }]}
         onPress={onLogout}
         hitSlop={12}
       >
@@ -210,13 +212,16 @@ export default function ProfileScreen({
 }
 
 function EditField({ ...inputProps }) {
+  const [focused, setFocused] = useState(false);
   return (
     <View style={styles.fieldRow}>
-      <View style={styles.field}>
+      <View style={[styles.field, focused && styles.fieldFocused]}>
         <TextInput
           style={styles.input}
           placeholderTextColor={COLORS.primary}
           {...inputProps}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
         />
       </View>
       <Pressable style={styles.editButton} hitSlop={8}>
@@ -240,18 +245,19 @@ function HistoryCard({ title, result }) {
         </View>
       ) : null}
       <View style={styles.historyCardBottom}>
-        <Svg
-          width="100%"
-          height={22}
-          viewBox="0 0 100 22"
-          preserveAspectRatio="none"
-          style={styles.historyWave}
+        <View pointerEvents="none" style={styles.historyWave}>
+          <Svg
+            width="100%"
+            height={22}
+            viewBox="0 0 100 22"
+            preserveAspectRatio="none"
         >
-          <Path
-            d="M0,22 L0,12 Q25,-2 50,10 T100,8 L100,22 Z"
-            fill={COLORS.inputBg}
-          />
-        </Svg>
+            <Path
+              d="M0,22 L0,12 Q25,-2 50,10 T100,8 L100,22 Z"
+              fill={COLORS.inputBg}
+            />
+          </Svg>
+        </View>
         <Text style={styles.historyTitle}>{title}</Text>
       </View>
     </View>
@@ -284,7 +290,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 22,
     paddingTop: 24,
-    paddingBottom: 100,
+    paddingBottom: 24,
     alignItems: 'stretch',
     maxWidth: 480,
     width: '100%',
@@ -371,6 +377,11 @@ const styles = StyleSheet.create({
     height: 50,
     paddingHorizontal: 22,
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(2, 69, 124, 0.08)',
+  },
+  fieldFocused: {
+    borderColor: COLORS.primary,
   },
   input: {
     fontFamily: 'Montserrat_700Bold',
@@ -390,14 +401,14 @@ const styles = StyleSheet.create({
   },
   historyRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 8,
   },
   historyCard: {
-    flexBasis: '31%',
-    flexGrow: 1,
-    height: 110,
+    width: '30%',
+    maxWidth: 130,
+    aspectRatio: 1,
     borderRadius: 14,
     backgroundColor: COLORS.cardImage,
     overflow: 'hidden',
@@ -421,10 +432,11 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    height: 50,
+    minHeight: 48,
     backgroundColor: COLORS.inputBg,
     justifyContent: 'center',
-    paddingHorizontal: 8,
+    paddingHorizontal: 4,
+    paddingVertical: 4,
   },
   historyWave: {
     position: 'absolute',
@@ -434,9 +446,10 @@ const styles = StyleSheet.create({
   },
   historyTitle: {
     fontFamily: 'Montserrat_700Bold',
-    fontSize: 12,
+    fontSize: 10,
     color: COLORS.primary,
-    lineHeight: 16,
+    lineHeight: 12,
+    textAlign: 'center',
   },
   emptyText: {
     fontFamily: 'Montserrat_600SemiBold',
@@ -445,9 +458,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   logoutFloat: {
-    position: 'absolute',
-    right: 24,
-    bottom: 20,
+    alignSelf: 'flex-end',
+    marginRight: 24,
+    marginTop: 8,
+    marginBottom: 20,
     padding: 6,
   },
 });

@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Animated,
   Image,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -11,6 +12,7 @@ import {
 import Svg, { Path } from 'react-native-svg';
 import { Menu, RotateCcw, ArrowLeft } from 'lucide-react-native';
 import MenuDrawer from '../components/MenuDrawer';
+import useNativeLayout from '../components/useNativeLayout';
 import { getQuizQuestions } from '../api';
 
 const COLORS = {
@@ -33,6 +35,7 @@ export default function QuizQuestionScreen({
   onNavigate,
   onHome,
 }) {
+  const nativeLayout = useNativeLayout();
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState(null);
   const [score, setScore] = useState(0);
@@ -50,6 +53,31 @@ export default function QuizQuestionScreen({
   const resultsScale = useRef(new Animated.Value(0.85)).current;
 
   const current = questions[index];
+  const topicTitle = (video?.title || 'Quiz').trim();
+  const topicRef = useRef(null);
+  const [topicFontSize, setTopicFontSize] = useState(16);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !topicRef.current) return;
+    const element = topicRef.current;
+    const context = document.createElement('canvas').getContext('2d');
+    let active = true;
+    const fitTitle = () => {
+      if (!active || !context || !element.clientWidth) return;
+      const style = window.getComputedStyle(element);
+      context.font = `${style.fontWeight} 16px ${style.fontFamily}`;
+      const textWidth = context.measureText(topicTitle).width;
+      setTopicFontSize(Math.min(16, (element.clientWidth - 2) * 16 / Math.max(1, textWidth)));
+    };
+    const observer = new ResizeObserver(fitTitle);
+    observer.observe(element);
+    document.fonts.ready.then(fitTitle);
+    fitTitle();
+    return () => {
+      active = false;
+      observer.disconnect();
+    };
+  }, [topicTitle]);
 
   useEffect(() => {
     let active = true;
@@ -150,7 +178,7 @@ export default function QuizQuestionScreen({
 
   return (
     <View style={styles.flex}>
-      <View style={styles.header}>
+      <View style={[styles.header, nativeLayout.headerStyle]}>
         <Pressable onPress={onHome} hitSlop={8}>
           <Image
             source={require('../assets/logo-sistema.png')}
@@ -168,7 +196,9 @@ export default function QuizQuestionScreen({
       </View>
 
       <View style={styles.topicPill}>
-        <Text style={styles.topicText}>{video?.title || 'Quiz'}</Text>
+        <Text ref={topicRef} style={[styles.topicText, { fontSize: topicFontSize }]} accessibilityRole="header" numberOfLines={1} adjustsFontSizeToFit>
+          {topicTitle}
+        </Text>
       </View>
 
       <View style={styles.body}>
@@ -272,18 +302,19 @@ function AnswerCard({ label, variant, correct, selected, scale, onPress }) {
     <Pressable onPress={onPress} disabled={isAnswered} style={styles.cardPressable}>
       <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
         <View style={[styles.cardBottom, { backgroundColor: bottomColor }]}>
-          <Svg
-            width="100%"
-            height={32}
-            viewBox="0 0 100 32"
-            preserveAspectRatio="none"
-            style={styles.cardWave}
+          <View pointerEvents="none" style={styles.cardWave}>
+            <Svg
+              width="100%"
+              height={32}
+              viewBox="0 0 100 32"
+              preserveAspectRatio="none"
           >
-            <Path
-              d="M0,32 L0,18 Q25,-2 50,16 T100,14 L100,32 Z"
-              fill={bottomColor}
-            />
-          </Svg>
+              <Path
+                d="M0,32 L0,18 Q25,-2 50,16 T100,14 L100,32 Z"
+                fill={bottomColor}
+              />
+            </Svg>
+          </View>
           <Text style={[styles.cardLabel, { color: textColor }]}>{label}</Text>
         </View>
       </Animated.View>
@@ -312,19 +343,20 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   topicPill: {
-    backgroundColor: COLORS.inputBg,
-    alignSelf: 'flex-start',
-    paddingVertical: 12,
-    paddingLeft: 24,
-    paddingRight: 32,
-    borderTopRightRadius: 999,
-    borderBottomRightRadius: 999,
+    backgroundColor: 'rgba(152, 203, 220, 0.4)',
+    alignSelf: 'center',
+    width: '90%',
+    maxWidth: 424,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 14,
     marginTop: 24,
   },
   topicText: {
     fontFamily: 'Montserrat_700Bold',
     color: COLORS.primary,
     fontSize: 16,
+    lineHeight: 24,
   },
   body: {
     flex: 1,

@@ -108,13 +108,16 @@ function Field({
   onRightIconPress,
   ...inputProps
 }) {
+  const [focused, setFocused] = useState(false);
   return (
-    <View style={styles.field}>
+    <View style={[styles.field, focused && styles.fieldFocused]}>
       <View style={styles.fieldIcon}>{icon}</View>
       <TextInput
         style={styles.input}
         placeholderTextColor={COLORS.primary}
         {...inputProps}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
       />
       {rightIcon ? (
         <Pressable onPress={onRightIconPress} style={styles.fieldRightIcon}>
@@ -133,8 +136,9 @@ const styles = StyleSheet.create({
   scroll: {
     flexGrow: 1,
     paddingHorizontal: 28,
-    paddingTop: 80,
+    paddingTop: 40,
     paddingBottom: 40,
+    justifyContent: 'center',
     alignItems: 'stretch',
     maxWidth: 480,
     width: '100%',
@@ -167,6 +171,11 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     height: 56,
     paddingHorizontal: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(2, 69, 124, 0.08)',
+  },
+  fieldFocused: {
+    borderColor: COLORS.primary,
   },
   fieldIcon: {
     marginRight: 12,

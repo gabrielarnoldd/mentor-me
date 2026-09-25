@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { StatusBar } from 'expo-status-bar';
+import AppFrame from './components/AppFrame';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useFonts as usePaytoneOne, PaytoneOne_400Regular } from '@expo-google-fonts/paytone-one';
 import {
@@ -36,16 +36,16 @@ import {
 
 const VIDEO_PLAYLISTS = {
   curriculo: [
-    { title: 'Parte 1', source: require('./assets/parte 1.mov') },
-    { title: 'Parte 2', source: require('./assets/parte 2.mp4') },
-    { title: 'Parte 3 - Final', source: require('./assets/parte 3 - final.mp4') },
+    { title: 'Parte 1', source: require('./assets/parte 1.mov'), durationSeconds: 28.337 },
+    { title: 'Parte 2', source: require('./assets/parte 2.mp4'), durationSeconds: 32.392 },
+    { title: 'Parte 3 - Final', source: require('./assets/parte 3 - final.mp4'), durationSeconds: 28.062 },
   ],
   conexoes: [
-    { title: 'Parte 1', source: require('./assets/se conect 1.mp4') },
-    { title: 'Parte 2', source: require('./assets/se conect 2.mp4') },
+    { title: 'Parte 1', source: require('./assets/se conect 1.mp4'), durationSeconds: 34.433 },
+    { title: 'Parte 2 - Final', source: require('./assets/se conect 2.mp4'), durationSeconds: 38.2 },
   ],
   'imagem-profissional': [
-    { source: require('./assets/de bom dia em bom dia.mp4') },
+    { source: require('./assets/de bom dia em bom dia.mp4'), durationSeconds: 32.833 },
   ],
 };
 
@@ -266,6 +266,14 @@ export default function App() {
   };
 
   const quizVideos = videos.length ? videos : videoProgress.videos;
+  const homeVideos = videos.map((video) => {
+    const playlist = VIDEO_PLAYLISTS[video.id] || [];
+    return {
+      ...video,
+      video_count: playlist.length,
+      duration_seconds: playlist.reduce((total, part) => total + part.durationSeconds, 0),
+    };
+  });
   const selectedPlaylist = VIDEO_PLAYLISTS[selectedVideo?.id] || [];
   const selectedPart = selectedPlaylist[selectedVideoPart];
 
@@ -280,8 +288,7 @@ export default function App() {
   }
 
   return (
-    <>
-      <StatusBar style="dark" />
+    <AppFrame authScreen={['login', 'register', 'forgot'].includes(screen)}>
       {screen === 'login' && (
         <LoginScreen
           onLogin={handleLogin}
@@ -310,7 +317,7 @@ export default function App() {
       {screen === 'home' && (
         <HomeScreen
           username={currentUser?.name || '(usuário)'}
-          videos={videos}
+          videos={homeVideos}
           onLogout={handleLogout}
           onNavigate={setScreen}
           onPlayVideo={playVideo}
@@ -318,12 +325,16 @@ export default function App() {
       )}
       {screen === 'videoPlayer' && (
         <VideoPlayerScreen
-          title={
-            selectedPart?.title
-              ? `${selectedVideo?.title} — ${selectedPart.title}`
-              : selectedVideo?.title
-          }
+          key={`${selectedVideo?.id}:${selectedVideoPart}`}
+          title={selectedVideo?.title}
+          partTitle={selectedPart?.title}
           source={selectedPart?.source}
+          partNumber={selectedVideoPart + 1}
+          partCount={selectedPlaylist.length}
+          initialDuration={selectedPart?.durationSeconds || 0}
+          onPrevious={selectedVideoPart > 0
+            ? () => setSelectedVideoPart((currentPart) => Math.max(0, currentPart - 1))
+            : undefined}
           isLastVideo={selectedVideoPart >= selectedPlaylist.length - 1}
           onLogout={() => setScreen('login')}
           onNavigate={setScreen}
@@ -376,7 +387,7 @@ export default function App() {
           onHome={() => setScreen('home')}
         />
       )}
-    </>
+    </AppFrame>
   );
 }
 

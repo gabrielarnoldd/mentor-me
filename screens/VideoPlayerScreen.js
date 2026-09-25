@@ -2,13 +2,15 @@ import { useEffect, useState } from 'react';
 import {
   Image,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
-  useWindowDimensions,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import {
   ArrowRight,
+  ArrowLeft,
   Menu,
   Pause,
   Play,
@@ -17,6 +19,7 @@ import {
 } from 'lucide-react-native';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import MenuDrawer from '../components/MenuDrawer';
+import useNativeLayout from '../components/useNativeLayout';
 
 const COLORS = {
   white: '#FFFDFD',
@@ -24,40 +27,46 @@ const COLORS = {
   inputBg: '#98CBDC',
   link: '#028BBF',
   primary: '#02457C',
-  placeholder: '#BFC3C8',
 };
 
 export default function VideoPlayerScreen({
   title = 'Vídeo',
+  partTitle,
   source,
+  partNumber = 1,
+  partCount = 1,
+  initialDuration = 0,
+  onPrevious,
   isLastVideo = false,
   onLogout,
   onNavigate,
   onHome,
   onFinish,
 }) {
+  const nativeLayout = useNativeLayout();
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
+  const [duration, setDuration] = useState(initialDuration);
+  const { height } = useWindowDimensions();
   const [menuOpen, setMenuOpen] = useState(false);
-  const { width, height } = useWindowDimensions();
-  const videoWidth = Math.min(320, width - 32, Math.max(180, (height - 300) * (9 / 16)));
   const player = useVideoPlayer(source || null, (nextPlayer) => {
     nextPlayer.timeUpdateEventInterval = 0.25;
   });
   const progress = duration > 0 ? Math.max(0, Math.min(100, (currentTime / duration) * 100)) : 0;
 
   useEffect(() => {
+    setPlaying(player.playing);
     setCurrentTime(0);
-    setDuration(0);
+    setDuration(player.duration || initialDuration);
 
     const playingSubscription = player.addListener('playingChange', ({ isPlaying }) => {
       setPlaying(isPlaying);
     });
     const timeSubscription = player.addListener('timeUpdate', ({ currentTime: nextTime }) => {
       setCurrentTime(nextTime);
-      setDuration(player.duration || 0);
+      setDuration(player.duration || initialDuration);
     });
+
     const sourceSubscription = player.addListener('sourceLoad', ({ duration: sourceDuration }) => {
       setDuration(sourceDuration || 0);
       player.currentTime = Math.min(0.01, sourceDuration || 0);
@@ -69,11 +78,11 @@ export default function VideoPlayerScreen({
       timeSubscription.remove();
       sourceSubscription.remove();
     };
-  }, [player]);
+  }, [player, initialDuration]);
 
   const togglePlayback = () => {
     if (!source) return;
-    if (playing) player.pause();
+    if (player.playing) player.pause();
     else player.play();
   };
 
@@ -82,9 +91,14 @@ export default function VideoPlayerScreen({
     onFinish?.();
   };
 
+  const previousVideo = () => {
+    player.pause();
+    onPrevious?.();
+  };
+
   return (
     <View style={styles.flex}>
-      <View style={styles.header}>
+      <View style={[styles.header, nativeLayout.headerStyle]}>
         <Pressable onPress={onHome} hitSlop={8}>
           <Image
             source={require('../assets/logo-sistema.png')}
@@ -101,17 +115,24 @@ export default function VideoPlayerScreen({
         </Pressable>
       </View>
 
-      <View style={styles.titlePill}>
-        <Text style={styles.titleText}>{title}</Text>
-      </View>
-
-      <View style={styles.body}>
-        <View style={[styles.videoArea, { width: videoWidth }]}>
+      <ScrollView {...nativeLayout.scrollProps} style={styles.scroll} contentContainerStyle={[styles.body, { paddingBottom: 22 + nativeLayout.bottomInset }]}>
+        <View style={styles.titleSection}>
+          <Text style={styles.titleText} accessibilityRole="header">{title}</Text>
+          <View style={styles.partRow}>
+          {partTitle ? (
+            <View style={styles.partBadge}>
+              <Text style={styles.partText}>{partTitle}</Text>
+            </View>
+          ) : null}
+          {partCount > 1 ? <Text style={styles.partCount}>{partNumber} de {partCount} vídeos</Text> : null}
+          </View>
+        </View>
+        <View style={[styles.videoArea, { height: Math.max(260, Math.min(440, height - 430)) }]}>
           {source ? (
             <VideoView
               player={player}
               style={styles.video}
-              contentFit="cover"
+              contentFit="contain"
               nativeControls={false}
               allowsFullscreen
             />
@@ -120,9 +141,13 @@ export default function VideoPlayerScreen({
           )}
         </View>
 
-        <View style={[styles.progressBar, { width: videoWidth }]}>
+        <View style={styles.progressBar}>
           <View style={[styles.progressFill, { width: `${progress}%` }]} />
           <View style={[styles.progressThumb, { left: `${progress}%` }]} />
+        </View>
+        <View style={styles.timeRow}>
+          <Text style={styles.timeText}>{formatTime(currentTime)}</Text>
+          <Text style={styles.timeText}>{formatTime(duration)}</Text>
         </View>
 
         <View style={styles.controls}>
@@ -130,9 +155,11 @@ export default function VideoPlayerScreen({
             hitSlop={8}
             style={styles.skipButton}
             onPress={() => player.seekBy(-10)}
+            accessibilityRole="button"
+            accessibilityLabel="Voltar 10 segundos"
             disabled={!source}
           >
-            <RotateCcw size={44} color={COLORS.primary} strokeWidth={2.2} />
+            <RotateCcw size={36} color={COLORS.primary} strokeWidth={2} />
             <Text style={styles.skipNumber}>10</Text>
           </Pressable>
 
@@ -140,12 +167,14 @@ export default function VideoPlayerScreen({
             hitSlop={8}
             style={styles.playButton}
             onPress={togglePlayback}
+            accessibilityRole="button"
+            accessibilityLabel={playing ? 'Pausar vídeo' : 'Reproduzir vídeo'}
             disabled={!source}
           >
             {playing ? (
-              <Pause size={36} color={COLORS.primary} strokeWidth={2.2} fill={COLORS.primary} />
+              <Pause size={28} color={COLORS.white} strokeWidth={2} fill={COLORS.white} />
             ) : (
-              <Play size={36} color={COLORS.primary} strokeWidth={2.2} fill={COLORS.primary} />
+              <Play size={28} color={COLORS.white} strokeWidth={2} fill={COLORS.white} />
             )}
           </Pressable>
 
@@ -153,24 +182,30 @@ export default function VideoPlayerScreen({
             hitSlop={8}
             style={styles.skipButton}
             onPress={() => player.seekBy(10)}
+            accessibilityRole="button"
+            accessibilityLabel="Avançar 10 segundos"
             disabled={!source}
           >
-            <RotateCw size={44} color={COLORS.primary} strokeWidth={2.2} />
+            <RotateCw size={36} color={COLORS.primary} strokeWidth={2} />
             <Text style={styles.skipNumber}>10</Text>
           </Pressable>
         </View>
 
-        <Pressable
-          style={[styles.nextVideo, { width: videoWidth }]}
-          hitSlop={8}
-          onPress={finishVideo}
-        >
+        <View style={styles.navigation}>
+          {onPrevious ? (
+            <Pressable style={({ pressed }) => [styles.previousVideo, pressed && styles.pressed]} onPress={previousVideo} accessibilityRole="button">
+              <ArrowLeft size={16} color={COLORS.primary} strokeWidth={2} />
+              <Text style={styles.previousVideoText}>Vídeo anterior</Text>
+            </Pressable>
+          ) : null}
+        <Pressable style={({ pressed }) => [styles.nextVideo, pressed && styles.pressed]} onPress={finishVideo} accessibilityRole="button">
           <Text style={styles.nextVideoText}>
             {isLastVideo ? 'Concluir aula ' : 'Próximo vídeo '}
           </Text>
-          <ArrowRight size={18} color={COLORS.primary} strokeWidth={2.5} />
+          <ArrowRight size={16} color={COLORS.white} strokeWidth={2} />
         </Pressable>
-      </View>
+        </View>
+      </ScrollView>
 
       <MenuDrawer
         visible={menuOpen}
@@ -183,6 +218,11 @@ export default function VideoPlayerScreen({
       />
     </View>
   );
+}
+
+function formatTime(value) {
+  const seconds = Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
 }
 
 const styles = StyleSheet.create({
@@ -206,37 +246,43 @@ const styles = StyleSheet.create({
   menuButton: {
     padding: 4,
   },
-  titlePill: {
-    backgroundColor: COLORS.inputBg,
-    alignSelf: 'flex-start',
-    paddingVertical: 12,
-    paddingLeft: 24,
-    paddingRight: 32,
-    borderTopRightRadius: 999,
-    borderBottomRightRadius: 999,
-    marginTop: 24,
+  titleSection: {
+    marginBottom: 16,
+    gap: 10,
   },
   titleText: {
     fontFamily: 'Montserrat_700Bold',
     color: COLORS.primary,
-    fontSize: 17,
+    fontSize: 20,
+    lineHeight: 28,
+  },
+  partBadge: {
+    alignSelf: 'flex-start',
+    maxWidth: '100%',
+    backgroundColor: 'rgba(2, 69, 124, 0.07)',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  partText: {
+    fontFamily: 'Montserrat_600SemiBold',
+    color: COLORS.primary,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  scroll: {
+    flex: 1,
   },
   body: {
-    flex: 1,
+    flexGrow: 1,
     paddingHorizontal: 22,
     paddingTop: 22,
     paddingBottom: 22,
     maxWidth: 480,
     width: '100%',
     alignSelf: 'center',
-    alignItems: 'center',
   },
   videoArea: {
-    backgroundColor: COLORS.placeholder,
-    borderRadius: 8,
-    width: '100%',
-    maxWidth: 320,
-    aspectRatio: 9 / 16,
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
@@ -251,12 +297,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   progressBar: {
-    width: '100%',
-    maxWidth: 320,
     height: 4,
-    backgroundColor: COLORS.primary,
+    backgroundColor: 'rgba(2, 69, 124, 0.15)',
     borderRadius: 2,
-    marginTop: 22,
+    marginTop: 20,
     marginHorizontal: 4,
     position: 'relative',
   },
@@ -278,7 +322,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 28,
+    gap: 24,
+    marginTop: 4,
   },
   skipButton: {
     width: 56,
@@ -297,21 +342,81 @@ const styles = StyleSheet.create({
   playButton: {
     width: 56,
     height: 56,
+    borderRadius: 28,
+    backgroundColor: COLORS.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   nextVideo: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    width: '100%',
-    maxWidth: 320,
-    justifyContent: 'flex-end',
-    marginTop: 12,
-    paddingVertical: 4,
+    justifyContent: 'center',
+    gap: 4,
+    minHeight: 48,
+    paddingHorizontal: 10,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: COLORS.primary,
   },
   nextVideoText: {
     fontFamily: 'Montserrat_700Bold',
-    fontSize: 15,
+    fontSize: 12,
+    color: COLORS.white,
+    flexShrink: 1,
+    textAlign: 'center',
+  },
+  partRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  partCount: {
+    fontFamily: 'Montserrat_500Medium',
+    fontSize: 12,
     color: COLORS.primary,
+  },
+  timeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  timeText: {
+    fontFamily: 'Montserrat_500Medium',
+    fontSize: 12,
+    color: COLORS.primary,
+  },
+  navigation: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 20,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(2, 69, 124, 0.12)',
+  },
+  previousVideo: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    minHeight: 48,
+    paddingHorizontal: 10,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(2, 69, 124, 0.2)',
+  },
+  previousVideoText: {
+    fontFamily: 'Montserrat_600SemiBold',
+    fontSize: 12,
+    color: COLORS.primary,
+    flexShrink: 1,
+    textAlign: 'center',
+  },
+  pressed: {
+    opacity: 0.8,
   },
 });

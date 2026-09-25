@@ -26,7 +26,8 @@
           "photosPermission": "O Mentor Me usa suas fotos para atualizar sua foto de perfil."
         }
       ],
-      "expo-video"
+      "expo-video",
+      "expo-status-bar"
     ]
   }
 }

@@ -5,12 +5,12 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  useWindowDimensions,
   View,
 } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { Menu } from 'lucide-react-native';
 import MenuDrawer from '../components/MenuDrawer';
+import useNativeLayout from '../components/useNativeLayout';
 
 const COLORS = {
   white: '#FFFDFD',
@@ -29,9 +29,8 @@ export default function ProgressScreen({
   onNavigate,
   onHome,
 }) {
+  const nativeLayout = useNativeLayout();
   const [menuOpen, setMenuOpen] = useState(false);
-  const { width } = useWindowDimensions();
-  const ringSize = Math.min(320, Math.max(220, width - 44));
   const totalQuizzes = videos.length;
   const answeredCount = videos.filter((video) => quizResults[video.id]).length;
   const answeredResults = videos
@@ -48,7 +47,7 @@ export default function ProgressScreen({
 
   return (
     <View style={styles.flex}>
-      <View style={styles.header}>
+      <View style={[styles.header, nativeLayout.headerStyle]}>
         <Pressable onPress={onHome} hitSlop={8}>
           <Image
             source={require('../assets/logo-sistema.png')}
@@ -69,7 +68,7 @@ export default function ProgressScreen({
         <Text style={styles.usernameText}>{username}</Text>
       </View>
 
-      <ScrollView
+      <ScrollView {...nativeLayout.scrollProps}
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -86,12 +85,8 @@ export default function ProgressScreen({
           Seu progresso nos quizzes
         </Text>
 
-        <View style={[styles.ringWrapper, { width: ringSize, height: ringSize }]}>
-          <ProgressRing
-            percent={averageScorePercent}
-            size={ringSize}
-            stroke={Math.max(18, Math.round(ringSize * 0.08))}
-          />
+        <View style={styles.ringWrapper}>
+          <ProgressRing percent={averageScorePercent} size={320} stroke={26} />
           <View pointerEvents="none" style={styles.ringCenter}>
             <Text style={styles.ringPercent}>{averageScorePercent}%</Text>
             <Text style={styles.ringLabel}>Média</Text>
@@ -237,6 +232,9 @@ const styles = StyleSheet.create({
     color: COLORS.link,
   },
   ringWrapper: {
+    width: '100%',
+    maxWidth: 320,
+    aspectRatio: 1,
     alignSelf: 'center',
     marginTop: 8,
     marginBottom: 36,

@@ -12,6 +12,7 @@ import {
 import Svg, { Path } from 'react-native-svg';
 import { ChevronDown, Menu, X } from 'lucide-react-native';
 import MenuDrawer from '../components/MenuDrawer';
+import useNativeLayout from '../components/useNativeLayout';
 
 const COLORS = {
   white: '#FFFDFD',
@@ -39,6 +40,7 @@ export default function QuizScreen({
   onSelectTopic,
   quizResults = {},
 }) {
+  const nativeLayout = useNativeLayout();
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmCard, setConfirmCard] = useState(null);
   const [showAll, setShowAll] = useState(false);
@@ -78,7 +80,7 @@ export default function QuizScreen({
 
   return (
     <View style={styles.flex}>
-      <View style={styles.header}>
+      <View style={[styles.header, nativeLayout.headerStyle]}>
         <Pressable onPress={onHome} hitSlop={8}>
           <Image
             source={require('../assets/logo-sistema.png')}
@@ -99,7 +101,7 @@ export default function QuizScreen({
         <Text style={styles.usernameText}>{username}</Text>
       </View>
 
-      <ScrollView
+      <ScrollView {...nativeLayout.scrollProps}
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -109,6 +111,7 @@ export default function QuizScreen({
           {visibleVideos.map((video) => {
             return (
               <Card
+                nativeCardStyle={nativeLayout.quizCardStyle}
                 key={video.id}
                 title={video.title}
                 image={VIDEO_IMAGES[video.id]}
@@ -202,7 +205,7 @@ export default function QuizScreen({
   );
 }
 
-function Card({ title, onPress, result, image }) {
+function Card({ nativeCardStyle, title, onPress, result, image }) {
   const scoreColor = result
     ? result.score / result.total >= 0.6
       ? COLORS.correct
@@ -214,6 +217,7 @@ function Card({ title, onPress, result, image }) {
       onPress={onPress}
       style={({ pressed }) => [
         styles.card,
+        nativeCardStyle,
         image && styles.cardWithImage,
         pressed && { opacity: 0.85 },
       ]}
@@ -232,18 +236,19 @@ function Card({ title, onPress, result, image }) {
         </View>
       )}
       <View style={styles.cardBottom}>
-        <Svg
-          width="100%"
-          height={32}
-          viewBox="0 0 100 32"
-          preserveAspectRatio="none"
-          style={styles.cardWave}
+        <View pointerEvents="none" style={styles.cardWave}>
+          <Svg
+            width="100%"
+            height={32}
+            viewBox="0 0 100 32"
+            preserveAspectRatio="none"
         >
-          <Path
-            d="M0,32 L0,18 Q25,-2 50,16 T100,14 L100,32 Z"
-            fill={COLORS.inputBg}
-          />
-        </Svg>
+            <Path
+              d="M0,32 L0,18 Q25,-2 50,16 T100,14 L100,32 Z"
+              fill={COLORS.inputBg}
+            />
+          </Svg>
+        </View>
         <Text style={styles.cardTitle}>{title}</Text>
       </View>
     </Pressable>
@@ -290,10 +295,10 @@ const styles = StyleSheet.create({
     marginTop: 18,
   },
   scrollContent: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 28,
     paddingBottom: 120,
     alignSelf: 'center',
-    maxWidth: 1152,
+    maxWidth: 480,
     width: '100%',
   },
   sectionTitle: {
@@ -304,18 +309,12 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   cardsContainer: {
-    width: '100%',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
     gap: 24,
     alignItems: 'center',
   },
   card: {
     width: '100%',
     maxWidth: 340,
-    flexBasis: 300,
-    flexGrow: 1,
     height: 220,
     borderRadius: 24,
     backgroundColor: COLORS.cardImage,
