@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { ChevronDown, Menu, X } from 'lucide-react-native';
+import { ChevronDown, ChevronUp, Menu, X } from 'lucide-react-native';
 import MenuDrawer from '../components/MenuDrawer';
 import useNativeLayout from '../components/useNativeLayout';
 
@@ -131,12 +131,13 @@ export default function QuizScreen({
             onPress={() => setShowAll((prev) => !prev)}
           >
             <Text style={styles.seeMoreText}>{showAll ? 'Mostrar Menos' : 'Mostrar Mais'}</Text>
-            <ChevronDown
-              size={18}
-              color={COLORS.primary}
-              strokeWidth={2.5}
-              style={showAll && styles.seeMoreIconUp}
-            />
+            <View style={styles.seeMoreIcon} pointerEvents="none">
+              {showAll ? (
+                <ChevronUp width={20} height={20} color={COLORS.primary} strokeWidth={2.5} />
+              ) : (
+                <ChevronDown width={20} height={20} color={COLORS.primary} strokeWidth={2.5} />
+              )}
+            </View>
           </Pressable>
         )}
       </ScrollView>
@@ -393,8 +394,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: COLORS.primary,
   },
-  seeMoreIconUp: {
-    transform: [{ rotate: '180deg' }],
+  seeMoreIcon: {
+    width: 20,
+    height: 20,
+    flexShrink: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   emptyText: {
     fontFamily: 'Montserrat_600SemiBold',
