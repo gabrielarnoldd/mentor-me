@@ -47,7 +47,12 @@ export default function VideoPlayerScreen({
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(initialDuration);
-  const { height } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
+  const [videoAreaWidth, setVideoAreaWidth] = useState(null);
+  const videoAreaHeight = Math.max(260, Math.min(440, height - 430));
+  // All current lesson files are 576 x 1024. Clip the image bounds,
+  // rather than the wider area containing the portrait video.
+  const videoWidth = Math.min(videoAreaWidth ?? Math.min(width, 480) - 44, videoAreaHeight * 9 / 16);
   const [menuOpen, setMenuOpen] = useState(false);
   const player = useVideoPlayer(source || null, (nextPlayer) => {
     nextPlayer.timeUpdateEventInterval = 0.25;
@@ -127,8 +132,9 @@ export default function VideoPlayerScreen({
           {partCount > 1 ? <Text style={styles.partCount}>{partNumber} de {partCount} vídeos</Text> : null}
           </View>
         </View>
-        <View style={[styles.videoArea, { height: Math.max(260, Math.min(440, height - 430)) }]}>
+        <View style={[styles.videoArea, { height: videoAreaHeight }]} onLayout={({ nativeEvent }) => setVideoAreaWidth(nativeEvent.layout.width)}>
           {source ? (
+            <View style={[styles.videoFrame, { width: videoWidth, height: videoWidth * 16 / 9 }]}>
             <VideoView
               player={player}
               style={styles.video}
@@ -136,6 +142,7 @@ export default function VideoPlayerScreen({
               nativeControls={false}
               allowsFullscreen
             />
+            </View>
           ) : (
             <Text style={styles.unavailableText}>Vídeo ainda não disponível.</Text>
           )}
@@ -290,6 +297,11 @@ const styles = StyleSheet.create({
   video: {
     width: '100%',
     height: '100%',
+    borderRadius: 12,
+  },
+  videoFrame: {
+    borderRadius: 12,
+    overflow: 'hidden',
   },
   unavailableText: {
     fontFamily: 'Montserrat_600SemiBold',

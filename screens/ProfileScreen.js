@@ -182,21 +182,22 @@ export default function ProfileScreen({
         {answeredQuizzes.length ? (
           <View style={styles.historyRow}>
             {answeredQuizzes.map((quiz) => (
-              <HistoryCard key={quiz.id} title={quiz.title} result={quiz.result} />
+              <HistoryCard key={quiz.id} title={quiz.title} result={quiz.result} nativeCardStyle={nativeLayout.profileCardStyle} />
             ))}
           </View>
         ) : (
           <Text style={styles.emptyText}>Nenhum quiz respondido ainda</Text>
         )}
+        <Pressable
+          style={[styles.logoutButton, { marginBottom: 20 + nativeLayout.bottomInset }]}
+          onPress={onLogout}
+          hitSlop={12}
+          accessibilityRole="button"
+          accessibilityLabel="Sair da conta"
+        >
+          <LogOut size={28} color={COLORS.primary} />
+        </Pressable>
       </ScrollView>
-
-      <Pressable
-        style={[styles.logoutFloat, { marginBottom: 20 + nativeLayout.bottomInset }]}
-        onPress={onLogout}
-        hitSlop={12}
-      >
-        <LogOut size={28} color={COLORS.primary} />
-      </Pressable>
 
       <MenuDrawer
         visible={menuOpen}
@@ -231,12 +232,12 @@ function EditField({ ...inputProps }) {
   );
 }
 
-function HistoryCard({ title, result }) {
+function HistoryCard({ title, result, nativeCardStyle }) {
   const scoreColor =
     result && result.score / result.total >= 0.6 ? COLORS.correct : COLORS.wrong;
 
   return (
-    <View style={styles.historyCard}>
+    <View style={[styles.historyCard, nativeCardStyle]}>
       {result ? (
         <View style={[styles.historyScoreBadge, { backgroundColor: scoreColor }]}>
           <Text style={styles.historyScoreText}>
@@ -457,10 +458,9 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     textAlign: 'center',
   },
-  logoutFloat: {
+  logoutButton: {
     alignSelf: 'flex-end',
-    marginRight: 24,
-    marginTop: 8,
+    marginTop: 24,
     marginBottom: 20,
     padding: 6,
   },
