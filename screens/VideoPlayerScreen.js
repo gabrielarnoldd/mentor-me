@@ -2,11 +2,9 @@ import { useEffect, useState } from 'react';
 import {
   Image,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
-  useWindowDimensions,
 } from 'react-native';
 import {
   ArrowRight,
@@ -47,12 +45,10 @@ export default function VideoPlayerScreen({
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(initialDuration);
-  const { width, height } = useWindowDimensions();
-  const [videoAreaWidth, setVideoAreaWidth] = useState(null);
-  const videoAreaHeight = Math.max(260, Math.min(440, height - 430));
+  const [videoAreaSize, setVideoAreaSize] = useState({ width: 0, height: 0 });
   // All current lesson files are 576 x 1024. Clip the image bounds,
   // rather than the wider area containing the portrait video.
-  const videoWidth = Math.min(videoAreaWidth ?? Math.min(width, 480) - 44, videoAreaHeight * 9 / 16);
+  const videoWidth = Math.max(0, Math.min(videoAreaSize.width, videoAreaSize.height * 9 / 16));
   const [menuOpen, setMenuOpen] = useState(false);
   const player = useVideoPlayer(source || null, (nextPlayer) => {
     nextPlayer.timeUpdateEventInterval = 0.25;
@@ -120,7 +116,7 @@ export default function VideoPlayerScreen({
         </Pressable>
       </View>
 
-      <ScrollView {...nativeLayout.scrollProps} style={styles.scroll} contentContainerStyle={[styles.body, { paddingBottom: 22 + nativeLayout.bottomInset }]}>
+      <View style={[styles.body, { paddingBottom: 22 + nativeLayout.bottomInset }]}>
         <View style={styles.titleSection}>
           <Text style={styles.titleText} accessibilityRole="header">{title}</Text>
           <View style={styles.partRow}>
@@ -132,16 +128,23 @@ export default function VideoPlayerScreen({
           {partCount > 1 ? <Text style={styles.partCount}>{partNumber} de {partCount} vídeos</Text> : null}
           </View>
         </View>
-        <View style={[styles.videoArea, { height: videoAreaHeight }]} onLayout={({ nativeEvent }) => setVideoAreaWidth(nativeEvent.layout.width)}>
+        <View
+          style={styles.videoArea}
+          onLayout={({ nativeEvent: { layout } }) => setVideoAreaSize((previous) => (
+            previous.width === layout.width && previous.height === layout.height
+              ? previous
+              : { width: layout.width, height: layout.height }
+          ))}
+        >
           {source ? (
             <View style={[styles.videoFrame, { width: videoWidth, height: videoWidth * 16 / 9 }]}>
-            <VideoView
-              player={player}
-              style={styles.video}
-              contentFit="contain"
-              nativeControls={false}
-              allowsFullscreen
-            />
+              <VideoView
+                player={player}
+                style={styles.video}
+                contentFit="contain"
+                nativeControls={false}
+                allowsFullscreen
+              />
             </View>
           ) : (
             <Text style={styles.unavailableText}>Vídeo ainda não disponível.</Text>
@@ -212,7 +215,7 @@ export default function VideoPlayerScreen({
           <ArrowRight size={16} color={COLORS.white} strokeWidth={2} />
         </Pressable>
         </View>
-      </ScrollView>
+      </View>
 
       <MenuDrawer
         visible={menuOpen}
@@ -238,6 +241,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
   header: {
+    flexShrink: 0,
     backgroundColor: COLORS.primary,
     height: 100,
     paddingTop: 28,
@@ -277,11 +281,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
   },
-  scroll: {
-    flex: 1,
-  },
   body: {
-    flexGrow: 1,
+    flex: 1,
+    minHeight: 0,
     paddingHorizontal: 22,
     paddingTop: 22,
     paddingBottom: 22,
@@ -290,6 +292,8 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   videoArea: {
+    flex: 1,
+    minHeight: 0,
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
@@ -300,6 +304,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   videoFrame: {
+    position: 'absolute',
     borderRadius: 12,
     overflow: 'hidden',
   },

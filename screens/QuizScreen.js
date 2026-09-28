@@ -2,7 +2,6 @@ import { useRef, useState } from 'react';
 import {
   Animated,
   Image,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -141,10 +140,6 @@ export default function QuizScreen({
           </Pressable>
         )}
       </ScrollView>
-
-      <Pressable style={styles.fab} onPress={onHome}>
-        <ChevronDown size={26} color={COLORS.primary} />
-      </Pressable>
 
       {confirmCard && (
         <Animated.View style={[styles.modalOverlay, { opacity: modalOpacity }]}>
@@ -407,27 +402,6 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     textAlign: 'center',
     paddingHorizontal: 24,
-  },
-  fab: {
-    position: 'absolute',
-    right: 20,
-    bottom: 20,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: COLORS.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 4,
-    ...Platform.select({
-      web: { boxShadow: '0 2px 6px rgba(0,0,0,0.15)' },
-      default: {
-        shadowColor: '#000',
-        shadowOpacity: 0.15,
-        shadowRadius: 6,
-        shadowOffset: { width: 0, height: 2 },
-      },
-    }),
   },
   // Confirmation modal
   modalOverlay: {
