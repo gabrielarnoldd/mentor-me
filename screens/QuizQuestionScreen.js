@@ -3,8 +3,10 @@ import {
   ActivityIndicator,
   Animated,
   Image,
+  Modal,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -27,6 +29,8 @@ const COLORS = {
 };
 
 const FEEDBACK_MS = 900;
+const PHOTO_QUESTION = 'Devo colocar uma foto minha no meu currículo?';
+const PHOTO_HINT = 'Você não deve colocar sua foto no seu currículo, para evitar interpretações precipitadas sobre seu perfil.';
 
 export default function QuizQuestionScreen({
   video,
@@ -38,6 +42,7 @@ export default function QuizQuestionScreen({
   const nativeLayout = useNativeLayout();
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState(null);
+  const [showAnswerFeedback, setShowAnswerFeedback] = useState(false);
   const [score, setScore] = useState(0);
   const [answered, setAnswered] = useState(0);
   const [showResults, setShowResults] = useState(false);
@@ -51,6 +56,8 @@ export default function QuizQuestionScreen({
   const scaleNo = useRef(new Animated.Value(1)).current;
   const resultsOpacity = useRef(new Animated.Value(0)).current;
   const resultsScale = useRef(new Animated.Value(0.85)).current;
+  const advanceTimer = useRef(null);
+  const advancing = useRef(false);
 
   const current = questions[index];
   const topicTitle = (video?.title || 'Quiz').trim();
@@ -91,6 +98,8 @@ export default function QuizQuestionScreen({
       setScore(0);
       setAnswered(0);
       setSelected(null);
+      setShowAnswerFeedback(false);
+      advancing.current = false;
       setShowResults(false);
       resultsOpacity.setValue(0);
       resultsScale.setValue(0.85);
@@ -116,15 +125,14 @@ export default function QuizQuestionScreen({
 
     return () => {
       active = false;
+      clearTimeout(advanceTimer.current);
     };
   }, [video?.id]);
 
   const handleAnswer = (choice) => {
-    if (selected) return;
+    if (selected || !current) return;
     setSelected(choice);
     setAnswered(index + 1);
-
-    if (!current) return;
 
     const isCorrect = choice === current.answer;
     const newScore = isCorrect ? score + 1 : score;
@@ -136,7 +144,17 @@ export default function QuizQuestionScreen({
       Animated.timing(anim, { toValue: 1, duration: 130, useNativeDriver: true }),
     ]).start();
 
-    setTimeout(() => {
+    if (current.text.trim() === PHOTO_QUESTION) {
+      setShowAnswerFeedback(true);
+    } else {
+      advanceTimer.current = setTimeout(() => advanceQuestion(newScore), FEEDBACK_MS);
+    }
+  };
+
+  const advanceQuestion = (newScore = score) => {
+      if (advancing.current) return;
+      advancing.current = true;
+      setShowAnswerFeedback(false);
       setSelected(null);
 
       if (index + 1 >= questions.length) {
@@ -152,8 +170,11 @@ export default function QuizQuestionScreen({
       } else {
         setIndex((i) => i + 1);
       }
-    }, FEEDBACK_MS);
   };
+
+  useEffect(() => {
+    advancing.current = false;
+  }, [index, showResults]);
 
   const handleRetry = () => {
     Animated.parallel([
@@ -237,6 +258,49 @@ export default function QuizQuestionScreen({
           <Text style={styles.question}>Nenhuma pergunta disponível</Text>
         )}
       </View>
+
+      <Modal
+        visible={showAnswerFeedback}
+        transparent
+        animationType="fade"
+        onRequestClose={() => advanceQuestion()}
+      >
+        <View style={styles.feedbackOverlay}>
+          <ScrollView
+            contentContainerStyle={styles.feedbackScrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.feedbackCard} accessibilityViewIsModal>
+              <View style={styles.feedbackBrand}>
+                <Image
+                  source={require('../assets/logo-sistema.png')}
+                  style={styles.feedbackLogo}
+                  resizeMode="contain"
+                  accessibilityLabel="Mentor Me"
+                />
+              </View>
+              <Text style={styles.feedbackTitle} accessibilityRole="header" accessibilityLiveRegion="polite">
+                {selected === current?.answer ? 'Parabéns! Você acertou.' : 'Que pena! Você errou.'}
+              </Text>
+              {selected !== current?.answer && (
+                <Text style={styles.feedbackHint}>
+                  <Text style={styles.feedbackHintLabel}>Dica: </Text>
+                  {PHOTO_HINT}
+                </Text>
+              )}
+              <Pressable
+                accessibilityRole="button"
+                style={({ pressed }) => [styles.retryButton, styles.feedbackButton, pressed && { opacity: 0.85 }]}
+                onPress={() => advanceQuestion()}
+              >
+                <Text style={styles.retryButtonText}>
+                  {index + 1 >= questions.length ? 'Ver resultado' : 'Próxima pergunta'}
+                </Text>
+              </Pressable>
+            </View>
+          </ScrollView>
+        </View>
+      </Modal>
 
       {showResults && (
         <Animated.View style={[styles.resultsOverlay, { opacity: resultsOpacity }]}>
@@ -428,6 +492,69 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 24,
+  },
+  feedbackOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(2, 69, 124, 0.55)',
+  },
+  feedbackScrollContent: {
+    flexGrow: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  feedbackCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 28,
+    padding: 24,
+    width: '100%',
+    maxWidth: 360,
+    borderWidth: 1,
+    borderColor: COLORS.inputBg,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  feedbackBrand: {
+    alignSelf: 'center',
+    backgroundColor: COLORS.primary,
+    width: 64,
+    height: 64,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  feedbackLogo: {
+    width: 48,
+    height: 48,
+  },
+  feedbackButton: {
+    minHeight: 48,
+  },
+  feedbackTitle: {
+    fontFamily: 'Montserrat_700Bold',
+    fontSize: 20,
+    lineHeight: 28,
+    color: COLORS.primary,
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  feedbackHint: {
+    fontFamily: 'Montserrat_600SemiBold',
+    fontSize: 14,
+    lineHeight: 22,
+    color: COLORS.primary,
+    marginBottom: 24,
+    backgroundColor: COLORS.background,
+    borderRadius: 16,
+    padding: 16,
+  },
+  feedbackHintLabel: {
+    fontFamily: 'Montserrat_700Bold',
+    color: COLORS.link,
   },
   resultsCard: {
     backgroundColor: COLORS.white,
