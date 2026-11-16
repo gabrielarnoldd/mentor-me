@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Image,
@@ -9,7 +9,8 @@ import {
   View,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { ChevronDown, ChevronUp, Menu, X } from 'lucide-react-native';
+import { ArrowRight, ClipboardList, ChevronDown, ChevronUp, Menu, X } from 'lucide-react-native';
+import { getQuizQuestions } from '../api';
 import MenuDrawer from '../components/MenuDrawer';
 import useNativeLayout from '../components/useNativeLayout';
 
@@ -43,10 +44,26 @@ export default function QuizScreen({
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmCard, setConfirmCard] = useState(null);
   const [showAll, setShowAll] = useState(false);
+  const [questionCounts, setQuestionCounts] = useState({});
   const INITIAL_VISIBLE = 2;
   const visibleVideos = showAll ? videos : videos.slice(0, INITIAL_VISIBLE);
   const modalOpacity = useRef(new Animated.Value(0)).current;
   const modalScale = useRef(new Animated.Value(0.9)).current;
+
+  useEffect(() => {
+    let active = true;
+    Promise.all(videos.map(async (video) => {
+      try {
+        const questions = await getQuizQuestions(video.id);
+        return [video.id, questions.length];
+      } catch {
+        return [video.id, null];
+      }
+    })).then((entries) => {
+      if (active) setQuestionCounts(Object.fromEntries(entries));
+    });
+    return () => { active = false; };
+  }, [videos]);
 
   const handleCardPress = (video) => {
     const result = quizResults[video.id];
@@ -96,15 +113,14 @@ export default function QuizScreen({
         </Pressable>
       </View>
 
-      <View style={styles.usernamePill}>
-        <Text style={styles.usernameText}>{username}</Text>
-      </View>
-
       <ScrollView {...nativeLayout.scrollProps}
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        <View style={styles.usernamePill}>
+          <Text style={styles.usernameText}>{username}</Text>
+        </View>
         <Text style={styles.sectionTitle}>Quiz</Text>
         <View style={styles.cardsContainer}>
           {visibleVideos.map((video) => {
@@ -115,6 +131,7 @@ export default function QuizScreen({
                 title={video.title}
                 image={VIDEO_IMAGES[video.id]}
                 result={quizResults[video.id]}
+                questionCount={questionCounts[video.id]}
                 onPress={() => handleCardPress(video)}
               />
             );
@@ -201,7 +218,7 @@ export default function QuizScreen({
   );
 }
 
-function Card({ nativeCardStyle, title, onPress, result, image }) {
+function Card({ nativeCardStyle, title, onPress, result, image, questionCount }) {
   const scoreColor = result
     ? result.score / result.total >= 0.6
       ? COLORS.correct
@@ -211,6 +228,8 @@ function Card({ nativeCardStyle, title, onPress, result, image }) {
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${title}. ${questionCount != null ? `${questionCount} perguntas. ` : ''}${result ? 'Responder novamente' : 'Começar quiz'}`}
       style={({ pressed }) => [
         styles.card,
         nativeCardStyle,
@@ -246,6 +265,22 @@ function Card({ nativeCardStyle, title, onPress, result, image }) {
           </Svg>
         </View>
         <Text style={styles.cardTitle}>{title}</Text>
+        <View style={styles.cardMeta}>
+          <View style={styles.metaItem}>
+            <ClipboardList size={14} color={COLORS.primary} strokeWidth={2} />
+            <Text style={styles.metaText}>
+              {questionCount != null ? `${questionCount} ${questionCount === 1 ? 'pergunta' : 'perguntas'}` : 'Quiz'}
+            </Text>
+          </View>
+          <View style={styles.metaDot} />
+          <Text style={styles.metaText}>Sim ou não</Text>
+        </View>
+        <View style={styles.cardAction}>
+          <Text style={styles.cardActionText}>{result ? 'Responder novamente' : 'Começar quiz'}</Text>
+          <View style={styles.cardActionIcon}>
+            <ArrowRight size={16} color={COLORS.white} strokeWidth={2} />
+          </View>
+        </View>
       </View>
     </Pressable>
   );
@@ -279,7 +314,9 @@ const styles = StyleSheet.create({
     paddingRight: 32,
     borderTopRightRadius: 999,
     borderBottomRightRadius: 999,
-    marginTop: 24,
+    marginLeft: -28,
+    marginBottom: 18,
+    maxWidth: '100%',
   },
   usernameText: {
     fontFamily: 'Montserrat_700Bold',
@@ -288,10 +325,10 @@ const styles = StyleSheet.create({
   },
   scroll: {
     flex: 1,
-    marginTop: 18,
   },
   scrollContent: {
     paddingHorizontal: 28,
+    paddingTop: 24,
     paddingBottom: 120,
     alignSelf: 'center',
     maxWidth: 480,
@@ -355,10 +392,11 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    height: 110,
+    minHeight: 150,
     backgroundColor: COLORS.inputBg,
     justifyContent: 'center',
     paddingHorizontal: 22,
+    paddingVertical: 16,
   },
   cardWave: {
     position: 'absolute',
@@ -371,6 +409,54 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: COLORS.primary,
     lineHeight: 24,
+  },
+  cardMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 10,
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  metaText: {
+    fontFamily: 'Montserrat_600SemiBold',
+    fontSize: 12,
+    color: COLORS.primary,
+  },
+  metaDot: {
+    width: 3,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: COLORS.primary,
+    opacity: 0.5,
+  },
+  cardAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(2, 69, 124, 0.14)',
+    marginTop: 12,
+    paddingTop: 10,
+    gap: 8,
+  },
+  cardActionText: {
+    flex: 1,
+    fontFamily: 'Montserrat_700Bold',
+    fontSize: 12,
+    color: COLORS.primary,
+  },
+  cardActionIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   seeMoreButton: {
     flexDirection: 'row',

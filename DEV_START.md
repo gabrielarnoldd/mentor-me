@@ -1,45 +1,27 @@
-# 🚀 Comando Único para Rodar Tudo
+﻿# Rodar no Expo Go
 
-## ⚡ Rodar Backend + Frontend e abrir a página
+Instale as dependencias na primeira execucao:
 
-```bash
+```powershell
+npm install
+npm --prefix server install
+```
+
+Inicie o backend e o Expo com QR code:
+
+```powershell
 npm start
 ```
 
-Este comando inicia:
-- ✅ Backend (Express em `http://localhost:4000`) com auto-reload via nodemon
-- ✅ Frontend (Expo Web em `http://localhost:8082`) e abre a página no navegador
+Conecte o celular e o computador a mesma rede Wi-Fi. No Android, escaneie o QR code pelo Expo Go; no iPhone, pela Camera. Use uma versao do Expo Go compativel com o SDK 58 deste projeto (https://expo.dev/go).
 
-## 🎯 Saída esperada
+Login, cadastro, quizzes e progresso precisam do backend na porta 4000 e do MySQL configurado conforme MYSQL_SETUP.md. O aplicativo usa automaticamente o IP do computador informado pelo Metro. Permita o acesso do Node.js pela rede privada no firewall se o celular nao conseguir conectar.
 
-Você verá:
-```
-[0] Servidor rodando em http://localhost:4000
-[1] Waiting on http://localhost:8082
-[1] Web is waiting on http://localhost:8082
-```
+Outros comandos:
 
-A página abre sozinha em `http://localhost:8082`. Se não abrir, acesse essa URL no navegador.
+- `npm run dev`: backend e Expo Go, limpando o cache do Metro.
+- `npm run expo`: apenas Expo Go, com QR code na rede local.
+- `npm run backend`: apenas backend.
+- `npm run web`: apenas frontend web.
 
-## 📝 Outros scripts disponíveis
-
-| Comando | O que faz |
-|---------|-----------|
-| `npm start` | 🔥 Backend + Frontend Web (abre a página) |
-| `npm run dev` | Backend + Frontend com `--clear` (porta 8083) |
-| `npm run expo` | Expo só (menu com QR code) |
-| `npm run backend` | Backend só (sem auto-reload) |
-| `npm run android` | Expo em Android |
-| `npm run ios` | Expo em iOS |
-| `npm run web` | Expo em Web (sem backend) |
-
-## 🛑 Parar os servidores
-
-Pressione `Ctrl+C` no terminal para parar ambos os servidores.
-
-## ✨ Benefícios
-
-- ✅ Um único comando para tudo
-- ✅ Backend auto-recarrega com nodemon
-- ✅ Frontend auto-recarrega com Expo
-- ✅ Perfeito para desenvolvimento
+Para parar os servidores, pressione Ctrl+C.

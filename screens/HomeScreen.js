@@ -223,9 +223,9 @@ const styles = StyleSheet.create({
   },
   scroll: {
     flex: 1,
-    marginTop: 24,
   },
   scrollContent: {
+    paddingTop: 24,
     paddingBottom: 120,
     gap: 24,
     alignItems: 'center',

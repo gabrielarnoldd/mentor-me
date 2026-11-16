@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
 import AppFrame from './components/AppFrame';
+import ScreenTransition from './components/ScreenTransition';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import { useFonts as usePaytoneOne, PaytoneOne_400Regular } from '@expo-google-fonts/paytone-one';
+import { PaytoneOne_400Regular } from '@expo-google-fonts/paytone-one';
 import {
-  useFonts as useMontserrat,
   Montserrat_500Medium,
   Montserrat_600SemiBold,
   Montserrat_700Bold,
   Montserrat_700Bold_Italic,
 } from '@expo-google-fonts/montserrat';
-import { useFonts as useCustomFonts } from 'expo-font';
+import { useFonts } from 'expo-font';
 import LoginScreen from './screens/LoginScreen';
 import ForgotPasswordScreen from './screens/ForgotPasswordScreen';
 import RegisterScreen from './screens/RegisterScreen';
@@ -50,16 +50,20 @@ const VIDEO_PLAYLISTS = {
 };
 
 export default function App() {
-  const [paytoneLoaded] = usePaytoneOne({ PaytoneOne_400Regular });
-  const [montserratLoaded] = useMontserrat({
+  const [fontsLoaded, fontError] = useFonts({
+    PaytoneOne_400Regular,
     Montserrat_500Medium,
     Montserrat_600SemiBold,
     Montserrat_700Bold,
     Montserrat_700Bold_Italic,
-  });
-  const [natsLoaded] = useCustomFonts({
     NATS_400Regular: require('./assets/fonts/NATS-Regular.ttf'),
   });
+
+  useEffect(() => {
+    if (fontError) {
+      console.warn('Erro ao carregar fontes; usando fontes do sistema:', fontError.message);
+    }
+  }, [fontError]);
 
   const [screen, setScreen] = useState('login');
   const [currentUser, setCurrentUser] = useState(null);
@@ -277,7 +281,7 @@ export default function App() {
   const selectedPlaylist = VIDEO_PLAYLISTS[selectedVideo?.id] || [];
   const selectedPart = selectedPlaylist[selectedVideoPart];
 
-  const ready = paytoneLoaded && montserratLoaded && natsLoaded;
+  const ready = fontsLoaded || fontError;
 
   if (!ready) {
     return (
@@ -289,6 +293,7 @@ export default function App() {
 
   return (
     <AppFrame authScreen={['login', 'register', 'forgot'].includes(screen)}>
+      <ScreenTransition screenKey={screen}>
       {screen === 'login' && (
         <LoginScreen
           onLogin={handleLogin}
@@ -387,6 +392,7 @@ export default function App() {
           onHome={() => setScreen('home')}
         />
       )}
+      </ScreenTransition>
     </AppFrame>
   );
 }

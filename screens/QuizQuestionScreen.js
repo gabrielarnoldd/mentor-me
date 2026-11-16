@@ -28,9 +28,6 @@ const COLORS = {
   wrong: '#EF4444',
 };
 
-const FEEDBACK_MS = 900;
-const PHOTO_QUESTION = 'Devo colocar uma foto minha no meu currículo?';
-const PHOTO_HINT = 'Você não deve colocar sua foto no seu currículo, para evitar interpretações precipitadas sobre seu perfil.';
 
 export default function QuizQuestionScreen({
   video,
@@ -56,7 +53,6 @@ export default function QuizQuestionScreen({
   const scaleNo = useRef(new Animated.Value(1)).current;
   const resultsOpacity = useRef(new Animated.Value(0)).current;
   const resultsScale = useRef(new Animated.Value(0.85)).current;
-  const advanceTimer = useRef(null);
   const advancing = useRef(false);
 
   const current = questions[index];
@@ -125,12 +121,12 @@ export default function QuizQuestionScreen({
 
     return () => {
       active = false;
-      clearTimeout(advanceTimer.current);
     };
   }, [video?.id]);
 
   const handleAnswer = (choice) => {
-    if (selected || !current) return;
+    if (selected || advancing.current || !current) return;
+    advancing.current = true;
     setSelected(choice);
     setAnswered(index + 1);
 
@@ -144,16 +140,12 @@ export default function QuizQuestionScreen({
       Animated.timing(anim, { toValue: 1, duration: 130, useNativeDriver: true }),
     ]).start();
 
-    if (current.text.trim() === PHOTO_QUESTION) {
-      setShowAnswerFeedback(true);
-    } else {
-      advanceTimer.current = setTimeout(() => advanceQuestion(newScore), FEEDBACK_MS);
-    }
+    setShowAnswerFeedback(true);
   };
 
   const advanceQuestion = (newScore = score) => {
-      if (advancing.current) return;
-      advancing.current = true;
+      if (!advancing.current) return;
+      advancing.current = false;
       setShowAnswerFeedback(false);
       setSelected(null);
 
@@ -285,7 +277,7 @@ export default function QuizQuestionScreen({
               {selected !== current?.answer && (
                 <Text style={styles.feedbackHint}>
                   <Text style={styles.feedbackHintLabel}>Dica: </Text>
-                  {PHOTO_HINT}
+                  {current?.hint || `A resposta correta para esta pergunta é ${current?.answer === 'yes' ? 'Sim' : 'Não'}.`}
                 </Text>
               )}
               <Pressable

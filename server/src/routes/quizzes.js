@@ -5,40 +5,40 @@ const router = express.Router();
 
 const QUESTIONS_BY_VIDEO = {
   curriculo: [
-    { text: 'Devo colocar uma foto minha no meu currículo?', answer: 'no', display_order: 1 },
-    { text: 'Devo incluir todas as minhas experiências?', answer: 'yes', display_order: 2 },
-    { text: 'O currículo deve passar de uma página?', answer: 'no', display_order: 3 },
-    { text: 'Devo listar hobbies no currículo?', answer: 'no', display_order: 4 },
-    { text: 'Vale a pena incluir idiomas em qualquer nível?', answer: 'no', display_order: 5 },
-    { text: 'Devo personalizar o currículo para cada vaga?', answer: 'yes', display_order: 6 },
-    { text: 'É importante incluir referências profissionais?', answer: 'no', display_order: 7 },
-    { text: 'Devo mencionar pretensão salarial no currículo?', answer: 'no', display_order: 8 },
-    { text: 'Preciso atualizar o currículo regularmente?', answer: 'yes', display_order: 9 },
-    { text: 'Vale a pena pedir feedback sobre o currículo?', answer: 'yes', display_order: 10 },
+    { text: 'Devo colocar uma foto minha no meu currículo?', answer: 'no', display_order: 1, hint: "Evite foto no currículo para manter o foco nas suas qualificações." },
+    { text: 'Devo incluir todas as minhas experiências?', answer: 'yes', display_order: 2, hint: "Inclua suas experiências profissionais e destaque as mais relevantes para a vaga." },
+    { text: 'O currículo deve passar de uma página?', answer: 'no', display_order: 3, hint: "Prefira um currículo de uma página, com informações claras e relevantes." },
+    { text: 'Devo listar hobbies no currículo?', answer: 'no', display_order: 4, hint: "Priorize suas qualificações profissionais em vez de listar hobbies." },
+    { text: 'Vale a pena incluir idiomas em qualquer nível?', answer: 'no', display_order: 5, hint: "Informe idiomas que você consegue usar no trabalho e indique seu nível real." },
+    { text: 'Devo personalizar o currículo para cada vaga?', answer: 'yes', display_order: 6, hint: "Adapte o currículo aos requisitos de cada vaga." },
+    { text: 'É importante incluir referências profissionais?', answer: 'no', display_order: 7, hint: "Envie referências profissionais apenas quando forem solicitadas." },
+    { text: 'Devo mencionar pretensão salarial no currículo?', answer: 'no', display_order: 8, hint: "Informe a pretensão salarial somente quando a empresa pedir." },
+    { text: 'Preciso atualizar o currículo regularmente?', answer: 'yes', display_order: 9, hint: "Atualize o currículo ao concluir cursos ou adquirir novas experiências." },
+    { text: 'Vale a pena pedir feedback sobre o currículo?', answer: 'yes', display_order: 10, hint: "Peça feedback para identificar informações pouco claras e melhorar o currículo." },
   ],
   conexoes: [
-    { text: 'Devo manter contato com a minha rede com regularidade?', answer: 'yes', display_order: 1 },
-    { text: 'Networking serve apenas quando estou procurando emprego?', answer: 'no', display_order: 2 },
-    { text: 'Vale a pena ajudar pessoas da rede sem esperar retorno imediato?', answer: 'yes', display_order: 3 },
-    { text: 'É útil participar de eventos da minha área?', answer: 'yes', display_order: 4 },
-    { text: 'Conexões de qualidade importam mais que a quantidade?', answer: 'yes', display_order: 5 },
-    { text: 'Devo me conectar apenas com pessoas do meu nível hierárquico?', answer: 'no', display_order: 6 },
-    { text: 'Vale a pena manter um perfil profissional atualizado online?', answer: 'yes', display_order: 7 },
-    { text: 'Pedir indicações para a minha rede é algo inapropriado?', answer: 'no', display_order: 8 },
-    { text: 'Manter uma boa relação com ex-colegas ajuda na carreira?', answer: 'yes', display_order: 9 },
-    { text: 'Devo procurar a minha rede apenas quando preciso de algo?', answer: 'no', display_order: 10 },
+    { text: 'Devo manter contato com a minha rede com regularidade?', answer: 'yes', display_order: 1, hint: "Mantenha contato com sua rede regularmente para fortalecer os vínculos." },
+    { text: 'Networking serve apenas quando estou procurando emprego?', answer: 'no', display_order: 2, hint: "Cultive sua rede também quando não estiver procurando emprego." },
+    { text: 'Vale a pena ajudar pessoas da rede sem esperar retorno imediato?', answer: 'yes', display_order: 3, hint: "Ajude sua rede sem exigir retorno imediato; isso fortalece a confiança." },
+    { text: 'É útil participar de eventos da minha área?', answer: 'yes', display_order: 4, hint: "Participe de eventos da sua área para conhecer pessoas e trocar experiências." },
+    { text: 'Conexões de qualidade importam mais que a quantidade?', answer: 'yes', display_order: 5, hint: "Priorize relações de confiança em vez de apenas acumular contatos." },
+    { text: 'Devo me conectar apenas com pessoas do meu nível hierárquico?', answer: 'no', display_order: 6, hint: "Conecte-se com profissionais de diferentes cargos e níveis de experiência." },
+    { text: 'Vale a pena manter um perfil profissional atualizado online?', answer: 'yes', display_order: 7, hint: "Mantenha seu perfil online atualizado para apresentar suas experiências e habilidades." },
+    { text: 'Pedir indicações para a minha rede é algo inapropriado?', answer: 'no', display_order: 8, hint: "Peça indicações com educação e explique o tipo de oportunidade que procura." },
+    { text: 'Manter uma boa relação com ex-colegas ajuda na carreira?', answer: 'yes', display_order: 9, hint: "Mantenha boas relações com ex-colegas; eles podem compartilhar oportunidades." },
+    { text: 'Devo procurar a minha rede apenas quando preciso de algo?', answer: 'no', display_order: 10, hint: "Converse com sua rede também para trocar ideias e oferecer ajuda." },
   ],
   'imagem-profissional': [
-    { text: 'A minha imagem profissional se constrói no dia a dia?', answer: 'yes', display_order: 1 },
-    { text: 'A primeira impressão pode impactar oportunidades?', answer: 'yes', display_order: 2 },
-    { text: 'A forma como me comunico faz parte da minha imagem?', answer: 'yes', display_order: 3 },
-    { text: 'Posso falar mal de antigos empregos publicamente?', answer: 'no', display_order: 4 },
-    { text: 'Vestir-se de forma adequada ao ambiente reforça a minha imagem profissional?', answer: 'yes', display_order: 5 },
-    { text: 'Ser pontual ajuda na minha imagem profissional?', answer: 'yes', display_order: 6 },
-    { text: 'As minhas redes sociais não influenciam a imagem profissional?', answer: 'no', display_order: 7 },
-    { text: 'Cumprir compromissos fortalece a minha reputação?', answer: 'yes', display_order: 8 },
-    { text: 'Tratar todos com respeito e cordialidade melhora a minha imagem?', answer: 'yes', display_order: 9 },
-    { text: 'A minha imagem profissional importa apenas em entrevistas?', answer: 'no', display_order: 10 },
+    { text: 'A minha imagem profissional se constrói no dia a dia?', answer: 'yes', display_order: 1, hint: "Suas atitudes diárias constroem sua imagem profissional." },
+    { text: 'A primeira impressão pode impactar oportunidades?', answer: 'yes', display_order: 2, hint: "Cuide da primeira impressão: postura, respeito e comunicação influenciam oportunidades." },
+    { text: 'A forma como me comunico faz parte da minha imagem?', answer: 'yes', display_order: 3, hint: "Comunique-se com clareza e respeito para fortalecer sua imagem profissional." },
+    { text: 'Posso falar mal de antigos empregos publicamente?', answer: 'no', display_order: 4, hint: "Evite falar mal de antigos empregos em público; mantenha uma postura profissional." },
+    { text: 'Vestir-se de forma adequada ao ambiente reforça a minha imagem profissional?', answer: 'yes', display_order: 5, hint: "Escolha roupas adequadas ao ambiente e ao contexto de trabalho." },
+    { text: 'Ser pontual ajuda na minha imagem profissional?', answer: 'yes', display_order: 6, hint: "Seja pontual para demonstrar respeito pelo tempo dos outros." },
+    { text: 'As minhas redes sociais não influenciam a imagem profissional?', answer: 'no', display_order: 7, hint: "Suas publicações nas redes sociais também influenciam sua imagem profissional." },
+    { text: 'Cumprir compromissos fortalece a minha reputação?', answer: 'yes', display_order: 8, hint: "Cumpra o que combinar e avise com antecedência se houver um imprevisto." },
+    { text: 'Tratar todos com respeito e cordialidade melhora a minha imagem?', answer: 'yes', display_order: 9, hint: "Trate todas as pessoas com respeito e cordialidade, independentemente do cargo." },
+    { text: 'A minha imagem profissional importa apenas em entrevistas?', answer: 'no', display_order: 10, hint: "Cuide da sua imagem no dia a dia, não apenas em entrevistas." },
   ],
 };
 
@@ -157,7 +157,12 @@ router.get('/:videoId/questions', validateVideoId, async (req, res, next) => {
       [req.videoId]
     );
 
-    res.json(questions);
+    const topicQuestions = QUESTIONS_BY_VIDEO[req.videoId] || GENERIC_QUESTIONS;
+    const hintsByText = new Map(topicQuestions.map((question) => [question.text, question.hint]));
+    res.json(questions.map((question) => ({
+      ...question,
+      hint: hintsByText.get(question.text) || null,
+    })));
   } catch (error) {
     next(error);
   }

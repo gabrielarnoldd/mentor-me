@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
+  Animated,
+  Easing,
   Image,
   Pressable,
   ScrollView,
@@ -11,6 +13,9 @@ import Svg, { Circle } from 'react-native-svg';
 import { Menu } from 'lucide-react-native';
 import MenuDrawer from '../components/MenuDrawer';
 import useNativeLayout from '../components/useNativeLayout';
+import useReducedMotion from '../components/useReducedMotion';
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 const COLORS = {
   white: '#FFFDFD',
@@ -64,16 +69,15 @@ export default function ProgressScreen({
         </Pressable>
       </View>
 
-      <View style={styles.usernamePill}>
-        <Text style={styles.usernameText}>{username}</Text>
-      </View>
-
       <ScrollView {...nativeLayout.scrollProps}
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         onScrollBeginDrag={onRefreshProgress}
       >
+        <View style={styles.usernamePill}>
+          <Text style={styles.usernameText}>{username}</Text>
+        </View>
         <View style={styles.videoSummary}>
           <Text style={styles.videoSummaryNumber}>
             {answeredCount}/{totalQuizzes}
@@ -130,10 +134,34 @@ export default function ProgressScreen({
 }
 
 function ProgressRing({ percent, size = 200, stroke = 18 }) {
+  const reducedMotion = useReducedMotion();
+  const progress = useRef(new Animated.Value(0)).current;
+  const target = Math.min(100, Math.max(0, Number(percent) || 0));
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
-  const offset = circumference * (1 - percent / 100);
+  const offset = progress.interpolate({
+    inputRange: [0, 100],
+    outputRange: [circumference, 0],
+    extrapolate: 'clamp',
+  });
   const center = size / 2;
+
+  useEffect(() => {
+    if (reducedMotion) {
+      progress.setValue(target);
+      return;
+    }
+    const animation = Animated.timing(progress, {
+      toValue: target,
+      duration: 1000,
+      delay: 180,
+      easing: Easing.out(Easing.cubic),
+      // SVG strokeDashoffset requires the JS driver in Expo Go.
+      useNativeDriver: false,
+    });
+    animation.start();
+    return () => animation.stop();
+  }, [progress, target, reducedMotion]);
 
   return (
     <Svg width={size} height={size}>
@@ -145,7 +173,7 @@ function ProgressRing({ percent, size = 200, stroke = 18 }) {
         strokeWidth={stroke}
         fill="none"
       />
-      <Circle
+      <AnimatedCircle
         cx={center}
         cy={center}
         r={radius}
@@ -155,6 +183,7 @@ function ProgressRing({ percent, size = 200, stroke = 18 }) {
         strokeLinecap="round"
         strokeDasharray={circumference}
         strokeDashoffset={offset}
+        opacity={progress.interpolate({ inputRange: [0, 0.01, 100], outputRange: [0, 1, 1], extrapolate: 'clamp' })}
         transform={`rotate(-90 ${center} ${center})`}
       />
     </Svg>
@@ -189,7 +218,9 @@ const styles = StyleSheet.create({
     paddingRight: 32,
     borderTopRightRadius: 999,
     borderBottomRightRadius: 999,
-    marginTop: 24,
+    marginLeft: -22,
+    marginBottom: 18,
+    maxWidth: '100%',
   },
   usernameText: {
     fontFamily: 'Montserrat_700Bold',
@@ -198,10 +229,10 @@ const styles = StyleSheet.create({
   },
   scroll: {
     flex: 1,
-    marginTop: 18,
   },
   scrollContent: {
     paddingHorizontal: 22,
+    paddingTop: 24,
     paddingBottom: 60,
     alignSelf: 'center',
     maxWidth: 480,

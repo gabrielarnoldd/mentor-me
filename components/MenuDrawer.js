@@ -1,4 +1,6 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
+import useReducedMotion from './useReducedMotion';
 import {
   BarChart3,
   LogOut,
@@ -24,30 +26,91 @@ const ITEMS = [
 ];
 
 export default function MenuDrawer({ visible, onClose, onNavigate, onLogout }) {
-  if (!visible) return null;
+  const reducedMotion = useReducedMotion();
+  const [mounted, setMounted] = useState(visible);
+  const progress = useRef(new Animated.Value(0)).current;
+  const itemProgress = useRef(ITEMS.map(() => new Animated.Value(0))).current;
+  const closing = useRef(false);
+  const runningAnimation = useRef(null);
+
+  useEffect(() => {
+    runningAnimation.current?.stop();
+    if (visible) {
+      closing.current = false;
+      setMounted(true);
+      itemProgress.forEach((value) => value.setValue(reducedMotion ? 1 : 0));
+      const animation = Animated.parallel([
+        Animated.timing(progress, {
+          toValue: 1, duration: reducedMotion ? 0 : 260,
+          easing: Easing.out(Easing.cubic), useNativeDriver: true,
+        }),
+        Animated.stagger(reducedMotion ? 0 : 35, itemProgress.map((value) => Animated.timing(value, {
+          toValue: 1, duration: reducedMotion ? 0 : 220,
+          easing: Easing.out(Easing.cubic), useNativeDriver: true,
+        }))),
+      ]);
+      runningAnimation.current = animation;
+      animation.start();
+    } else {
+      const animation = Animated.timing(progress, {
+        toValue: 0, duration: reducedMotion ? 0 : 180,
+        easing: Easing.in(Easing.cubic), useNativeDriver: true,
+      });
+      runningAnimation.current = animation;
+      animation.start(({ finished }) => { if (finished) setMounted(false); });
+    }
+    return () => runningAnimation.current?.stop();
+  }, [visible, reducedMotion, progress, itemProgress]);
+
+  const close = (afterClose) => {
+    if (closing.current) return;
+    closing.current = true;
+    runningAnimation.current?.stop();
+    const animation = Animated.timing(progress, {
+      toValue: 0, duration: reducedMotion ? 0 : 180,
+      easing: Easing.in(Easing.cubic), useNativeDriver: true,
+    });
+    runningAnimation.current = animation;
+    animation.start(({ finished }) => {
+      if (!finished) return;
+      setMounted(false);
+      onClose?.();
+      afterClose?.();
+    });
+  };
+
+  if (!mounted) return null;
 
   return (
     <View style={[styles.overlay, { pointerEvents: 'box-none' }]}>
-      <Pressable style={styles.backdrop} onPress={onClose} />
-      <View style={styles.drawer}>
+      <Animated.View style={[styles.backdrop, { opacity: progress }]}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={() => close()} accessibilityRole="button" accessibilityLabel="Fechar menu" />
+      </Animated.View>
+      <Animated.View style={[styles.drawer, {
+        opacity: progress,
+        transform: [{ translateX: progress.interpolate({ inputRange: [0, 1], outputRange: [44, 0] }) }],
+      }]}>
         <View style={styles.drawerHeader}>
           <Text style={styles.subtitle}>Sua carreira em foco</Text>
-          <Pressable onPress={onClose} hitSlop={12} style={styles.closeButton}>
+          <Pressable onPress={() => close()} hitSlop={12} style={styles.closeButton} accessibilityRole="button" accessibilityLabel="Fechar menu">
             <X size={16} color={COLORS.background} strokeWidth={2} />
           </Pressable>
         </View>
 
         <View style={styles.menuList}>
           {ITEMS.map(({ id, label, Icon, screen }, index) => (
-            <View key={id}>
+            <Animated.View key={id} style={{
+              opacity: itemProgress[index],
+              transform: [{ translateX: itemProgress[index].interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }],
+            }}>
               <Pressable
+                accessibilityRole="button"
                 style={({ pressed }) => [
                   styles.menuItem,
                   pressed && styles.menuItemPressed,
                 ]}
                 onPress={() => {
-                  onClose?.();
-                  if (screen) onNavigate?.(screen);
+                  close(() => onNavigate?.(screen));
                 }}
               >
                 <View style={styles.iconWrap}>
@@ -56,7 +119,7 @@ export default function MenuDrawer({ visible, onClose, onNavigate, onLogout }) {
                 <Text style={styles.menuLabel}>{label}</Text>
               </Pressable>
               {index < ITEMS.length - 1 && <View style={styles.divider} />}
-            </View>
+            </Animated.View>
           ))}
         </View>
 
@@ -67,7 +130,8 @@ export default function MenuDrawer({ visible, onClose, onNavigate, onLogout }) {
               styles.logoutButton,
               pressed && styles.menuItemPressed,
             ]}
-            onPress={onLogout}
+            onPress={() => close(onLogout)}
+            accessibilityRole="button"
             hitSlop={12}
           >
             <View style={styles.logoutIconWrap}>
@@ -76,7 +140,7 @@ export default function MenuDrawer({ visible, onClose, onNavigate, onLogout }) {
             <Text style={styles.logoutLabel}>Sair</Text>
           </Pressable>
         </View>
-      </View>
+      </Animated.View>
     </View>
   );
 }
@@ -132,7 +196,10 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   menuItemPressed: {
-    opacity: 0.6,
+    opacity: 0.8,
+    backgroundColor: 'rgba(152, 203, 220, 0.12)',
+    borderRadius: 12,
+    transform: [{ scale: 0.98 }],
   },
   iconWrap: {
     width: 36,
