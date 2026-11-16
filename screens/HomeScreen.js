@@ -1,3 +1,4 @@
+import UserGreeting from '../components/UserGreeting';
 import { useState } from 'react';
 import {
   Image,
@@ -80,9 +81,11 @@ export default function HomeScreen({
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.welcomePill}>
-          <Text style={styles.welcomeText}>Bem-vindo, {username}</Text>
-        </View>
+        <UserGreeting
+          username={username}
+          message="Seu próximo passo na carreira começa aqui."
+          style={styles.greeting}
+        />
         {visibleVideos.map((video) => (
           <Card
             nativeCardStyle={nativeLayout.homeCardStyle}
@@ -207,19 +210,10 @@ const styles = StyleSheet.create({
   menuButton: {
     padding: 4,
   },
-  welcomePill: {
-    backgroundColor: COLORS.primary,
-    alignSelf: 'flex-start',
-    paddingVertical: 12,
-    paddingLeft: 28,
-    paddingRight: 28,
-    borderTopRightRadius: 999,
-    borderBottomRightRadius: 999,
-  },
-  welcomeText: {
-    fontFamily: 'Montserrat_700Bold',
-    color: COLORS.white,
-    fontSize: 17  ,
+  greeting: {
+    width: '90%',
+    maxWidth: 340,
+    alignSelf: 'center',
   },
   scroll: {
     flex: 1,

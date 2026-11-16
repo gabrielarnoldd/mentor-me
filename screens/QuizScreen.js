@@ -1,3 +1,4 @@
+import UserGreeting from '../components/UserGreeting';
 import { useEffect, useRef, useState } from 'react';
 import {
   Animated,
@@ -118,9 +119,11 @@ export default function QuizScreen({
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.usernamePill}>
-          <Text style={styles.usernameText}>{username}</Text>
-        </View>
+        <UserGreeting
+          username={username}
+          message="Coloque em prática o que aprendeu e siga evoluindo."
+          style={styles.greeting}
+        />
         <Text style={styles.sectionTitle}>Quiz</Text>
         <View style={styles.cardsContainer}>
           {visibleVideos.map((video) => {
@@ -306,22 +309,8 @@ const styles = StyleSheet.create({
   menuButton: {
     padding: 4,
   },
-  usernamePill: {
-    backgroundColor: COLORS.primary,
-    alignSelf: 'flex-start',
-    paddingVertical: 12,
-    paddingLeft: 24,
-    paddingRight: 32,
-    borderTopRightRadius: 999,
-    borderBottomRightRadius: 999,
-    marginLeft: -28,
-    marginBottom: 18,
-    maxWidth: '100%',
-  },
-  usernameText: {
-    fontFamily: 'Montserrat_700Bold',
-    color: COLORS.white,
-    fontSize: 17,
+  greeting: {
+    marginBottom: 24,
   },
   scroll: {
     flex: 1,
