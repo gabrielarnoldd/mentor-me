@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import AppFrame from './components/AppFrame';
 import ScreenTransition from './components/ScreenTransition';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import StartupAnimation from './components/StartupAnimation';
 import { PaytoneOne_400Regular } from '@expo-google-fonts/paytone-one';
 import {
   Montserrat_500Medium,
@@ -50,6 +50,8 @@ const VIDEO_PLAYLISTS = {
 };
 
 export default function App() {
+  const [showStartup, setShowStartup] = useState(true);
+  const finishStartup = useCallback(() => setShowStartup(false), []);
   const [fontsLoaded, fontError] = useFonts({
     PaytoneOne_400Regular,
     Montserrat_500Medium,
@@ -283,16 +285,9 @@ export default function App() {
 
   const ready = fontsLoaded || fontError;
 
-  if (!ready) {
-    return (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" color="#02457C" />
-      </View>
-    );
-  }
-
   return (
     <AppFrame authScreen={['login', 'register', 'forgot'].includes(screen)}>
+      {ready && (
       <ScreenTransition screenKey={screen}>
       {screen === 'login' && (
         <LoginScreen
@@ -393,15 +388,8 @@ export default function App() {
         />
       )}
       </ScreenTransition>
+      )}
+      {showStartup && <StartupAnimation ready={Boolean(ready)} onFinish={finishStartup} />}
     </AppFrame>
   );
 }
-
-const styles = StyleSheet.create({
-  loader: {
-    flex: 1,
-    backgroundColor: '#D7E8EF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
